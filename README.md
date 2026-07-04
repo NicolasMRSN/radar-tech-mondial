@@ -43,3 +43,4 @@ Chaque article du jeu de données de départ est tiré d'un vrai média (L'Usine
 ## Licence
 
 Contenu fourni à titre informatif ; chaque résumé est une reformulation, pas une reproduction du texte source. Se référer aux liens cités pour les articles originaux.
+
