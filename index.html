@@ -9,7 +9,7 @@
 <script>
   window.addEventListener('error', function (e) {
     var el = document.getElementById('root');
-    if (el && el.children.length === 0) {
+    if (el && el.dataset.rendered !== '1') {
       el.innerHTML = '<pre style="color:#EDEFF4;background:#0B1220;padding:24px;white-space:pre-wrap;font-family:monospace;font-size:13px;">Erreur de chargement du tableau de bord.\n\n' +
         (e.message || e) + '\n\nSource: ' + (e.filename || 'inline') + (e.lineno ? (':' + e.lineno) : '') + '</pre>';
     }
@@ -24,7 +24,7 @@
 <div id="root">
   <pre style="color:#8B96AB;background:#0B1220;padding:24px;white-space:pre-wrap;font-family:monospace;font-size:13px;">Chargement du tableau de bord…</pre>
 </div>
-<script type="text/babel" data-presets="react">
+<script type="text/plain" id="component-source">
 try {
   const { useState, useMemo, useRef, useEffect } = React;
 
@@ -917,15 +917,28 @@ function Dashboard() {
   );
 }
 
-
   const root = ReactDOM.createRoot(document.getElementById('root'));
-  root.render(<Dashboard />);
+  root.render(React.createElement(Dashboard));
 } catch (err) {
   console.error(err);
-  document.getElementById('root').innerHTML =
-    '<pre style="color:#EDEFF4;background:#0B1220;padding:24px;white-space:pre-wrap;font-family:monospace;font-size:13px;">Erreur au rendu du tableau de bord.\n\n' +
-    (err && err.message ? err.message : String(err)) + '</pre>';
+  document.getElementById('root').innerHTML = '<pre style="color:#EDEFF4;background:#0B1220;padding:24px;white-space:pre-wrap;font-family:monospace;font-size:13px;">Erreur au rendu du tableau de bord.\n\n' + (err && err.message ? err.message : String(err)) + '</pre>';
 }
+</script>
+<script>
+(function () {
+  try {
+    var source = document.getElementById('component-source').textContent;
+    var output = Babel.transform(source, { presets: [['react', { runtime: 'classic' }]] }).code;
+    var run = new Function('React', 'ReactDOM', 'd3', output);
+    run(React, ReactDOM, d3);
+    document.getElementById('root').dataset.rendered = '1';
+  } catch (err) {
+    console.error(err);
+    document.getElementById('root').innerHTML =
+      '<pre style="color:#EDEFF4;background:#0B1220;padding:24px;white-space:pre-wrap;font-family:monospace;font-size:13px;">Erreur de transformation/rendu.\n\n' +
+      (err && err.message ? err.message : String(err)) + '</pre>';
+  }
+})();
 </script>
 </body>
 </html>
