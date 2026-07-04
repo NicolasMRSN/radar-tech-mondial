@@ -8,39 +8,21 @@ Tableau de bord de veille mondiale : actualités technologiques, industrielles e
 
 - `index.html` — page statique autonome (React + d3 chargés via CDN, JSX transpilé dans le navigateur avec Babel standalone, runtime JSX classique forcé explicitement). Aucune étape de build requise.
 - `dashboard-source.jsx` — le composant source, identique à celui utilisé comme artefact dans Claude.ai.
-- `scripts/refresh-news.mjs` — script exécuté par la GitHub Action ci-dessous.
-- `.github/workflows/refresh-news.yml` — automatisation planifiée qui met à jour `news.json`.
-- `news.json` — instantané généré automatiquement (absent tant que l'automatisation n'a pas tourné une première fois ; le site fonctionne très bien sans, avec les données de départ).
 
-## Comment fonctionne la mise à jour automatique
+## Comment ça se met à jour
 
-Le bouton « Actualiser » et le chargement de la page suivent cette logique :
+Ce site est un **instantané publié à la main**, pas un flux automatique :
 
-1. **Pont direct Claude.ai** (uniquement dans l'environnement artefact Claude.ai) : recherche web en direct, sans clé API, grâce à un pont spécifique aux artefacts.
-2. **Repli : `news.json`** (fonctionne partout, y compris ici en public) : la page relit ce fichier, généré par une GitHub Action planifiée qui tourne deux fois par jour et le committe dans le repo. Comme GitHub Pages se redéploie à chaque commit, chaque nouvelle génération est visible par les visiteurs dès leur prochain chargement de page.
+- Pas de clé API stockée nulle part, pas de coût récurrent, pas de GitHub Action planifiée.
+- Pour obtenir des données plus récentes : ouvre une conversation avec Claude (couvert par un abonnement Claude.ai classique, Pro ou autre — aucun coût API séparé), demande-lui de rechercher l'actualité et de mettre à jour le tableau de bord, puis de republier `index.html` sur ce repo.
+- Le bouton « Actualiser » dans l'interface ne fonctionne que **dans une conversation Claude.ai** (il utilise un pont de recherche web propre aux artefacts, sans clé API). Sur ce site public, cliquer dessus affiche un message qui l'explique clairement plutôt que d'échouer en silence.
 
-C'est la seule façon sûre de faire une "vraie" mise à jour en direct sans exposer de clé API dans le code d'un site public : la clé reste côté serveur (GitHub Actions), jamais dans le navigateur.
-
-## Activer la mise à jour automatique (une seule étape, à faire toi-même)
-
-1. Crée une clé API sur https://console.anthropic.com/settings/keys
-2. Dans ce repo : **Settings → Secrets and variables → Actions → New repository secret**
-3. Nom : `ANTHROPIC_API_KEY` — colle la clé dans le champ valeur (elle sera chiffrée, jamais visible dans les logs ni le code)
-4. C'est tout. La prochaine exécution planifiée (ou un déclenchement manuel via l'onglet **Actions → Refresh news snapshot → Run workflow**) mettra à jour `news.json`.
-
-⚠️ **Ne jamais coller cette clé ailleurs** (chat, issue, commit, fichier du repo) — uniquement dans le formulaire de secret GitHub, qui est fait pour ça.
-
-Sans ce secret, le workflow tourne mais s'arrête proprement (aucune erreur bruyante) et le site continue d'afficher les données de départ.
-
-### Ajuster la fréquence / le coût
-
-Chaque exécution consomme un peu de crédit API (un appel Claude avec recherche web). La fréquence par défaut (`0 6,18 * * *`, deux fois par jour) est modifiable dans `.github/workflows/refresh-news.yml` — passe par exemple à `0 6 * * *` pour une fois par jour.
+On a délibérément écarté l'option d'une automatisation côté serveur (GitHub Action + clé API perso) : elle aurait fonctionné, mais aurait généré un coût récurrent sur un compte Anthropic Console séparé de l'abonnement Claude.ai — non couvert par un abonnement Pro/Max. Demander une mise à jour manuelle à Claude de temps en temps est gratuit et suffisant pour ce type de contenu.
 
 ## Sourcing
 
-Chaque article du jeu de données de départ est tiré d'un vrai média (L'Usine Nouvelle, Zone Militaire/Opex360, The Verge, Breaking Defense, TechCrunch, Crunchbase News, Reuters/Al Jazeera, Aviation Week, SCMP, TechWire Asia, DigiTimes, RoboticsTomorrow, Zone Armée, Aeroflap, Zonebourse, La Libre, SPA, L'Essentiel de l'Éco, War on the Rocks, Türkiye Today, Canada.ca, Africa News Agency, Le Desk, etc.) et pointe vers l'article réel via son titre cliquable. Ce n'est **pas un classement de pays** — c'est un échantillon de démonstration ; n'importe quel écosystème national peut être ajouté, manuellement ou via l'automatisation.
+Chaque article du jeu de données est tiré d'un vrai média (L'Usine Nouvelle, Zone Militaire/Opex360, The Verge, Breaking Defense, TechCrunch, Crunchbase News, Reuters/Al Jazeera, Aviation Week, SCMP, TechWire Asia, DigiTimes, RoboticsTomorrow, Zone Armée, Aeroflap, Zonebourse, La Libre, SPA, L'Essentiel de l'Éco, War on the Rocks, Türkiye Today, Canada.ca, Africa News Agency, Le Desk, etc.) et pointe vers l'article réel via son titre cliquable. Ce n'est **pas un classement de pays** — c'est un échantillon de démonstration ; n'importe quel écosystème national peut être ajouté à la demande.
 
 ## Licence
 
 Contenu fourni à titre informatif ; chaque résumé est une reformulation, pas une reproduction du texte source. Se référer aux liens cités pour les articles originaux.
-
