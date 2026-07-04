@@ -1,0 +1,38 @@
+name: Refresh news snapshot
+
+on:
+  schedule:
+    # Twice a day (06:00 and 18:00 UTC). Adjust to taste — each run costs a
+    # small amount of Anthropic API credit (one Claude call with web search).
+    - cron: "0 6,18 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Fetch fresh news via Claude (web search, server-side)
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: node scripts/refresh-news.mjs
+
+      - name: Commit updated news.json if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add news.json
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Auto-refresh news snapshot"
+            git push
+          fi

@@ -383,6 +383,21 @@ async function fetchFreshNews() {
     }));
 }
 
+/* Fallback used when the direct Claude.ai artifact bridge is unavailable
+   (i.e. on the public static site). Reads news.json, a snapshot committed
+   periodically by a GitHub Action that holds the real API key server-side —
+   see .github/workflows/refresh-news.yml. Works from any static host. */
+async function fetchFromNewsJson() {
+  const resp = await fetch(`./news.json?t=${Date.now()}`, { cache: "no-store" });
+  if (!resp.ok) throw new Error(`news.json introuvable (${resp.status})`);
+  const data = await resp.json();
+  if (!data || !Array.isArray(data.items)) throw new Error("Format de news.json invalide.");
+  return {
+    items: data.items.map((it) => ({ ...it, fresh: true })),
+    generatedAt: data.generated_at || null,
+  };
+}
+
 /* ------------------------------------------------------------------ */
 /*  NETWORK GRAPH — company co-occurrence, laid out with d3-force.      */
 /*  Node color = the category most often associated with that company,  */
@@ -628,17 +643,52 @@ export default function Dashboard() {
 
   const resetAll = () => { setCountry("all"); setCategory("all"); setCompany(null); };
 
+  // On load: silently check for a scheduled snapshot (news.json), produced
+  // server-side by the GitHub Action. Works everywhere, including the public
+  // static site. If none exists yet (secret not configured, or first run
+  // hasn't happened), this just fails quietly and the seed data is shown.
+  useEffect(() => {
+    let cancelled = false;
+    fetchFromNewsJson()
+      .then(({ items: fresh, generatedAt }) => {
+        if (cancelled || fresh.length === 0) return;
+        setItems((prev) => {
+          const known = new Set(prev.map((p) => p.url).filter(Boolean));
+          const dedup = fresh.filter((f) => !f.url || !known.has(f.url));
+          return dedup.length ? [...dedup, ...prev] : prev;
+        });
+        if (generatedAt) setLastUpdated(new Date(generatedAt));
+      })
+      .catch(() => { /* no scheduled snapshot available — that's fine */ });
+    return () => { cancelled = true; };
+  }, []);
+
   const handleRefresh = async () => {
     setLoading(true);
     setError(null);
+    // 1) Try the live, no-key search bridge — only works inside a Claude.ai artifact.
     try {
       const fresh = await fetchFreshNews();
       if (fresh.length === 0) throw new Error("Aucun article exploitable dans la réponse.");
       setItems((prev) => [...fresh, ...prev.map((p) => ({ ...p, fresh: false }))]);
       setLastUpdated(new Date());
-    } catch (e) {
-      setError(e.message || "Actualisation impossible pour le moment.");
-    } finally {
+      return;
+    } catch (liveErr) {
+      // 2) Fall back to re-checking the scheduled snapshot — works on the public site too.
+      try {
+        const { items: fresh, generatedAt } = await fetchFromNewsJson();
+        setItems((prev) => {
+          const known = new Set(prev.map((p) => p.url).filter(Boolean));
+          const dedup = fresh.filter((f) => !f.url || !known.has(f.url));
+          if (dedup.length === 0) return prev.map((p) => ({ ...p, fresh: false }));
+          return [...dedup, ...prev.map((p) => ({ ...p, fresh: false }))];
+        });
+        if (generatedAt) setLastUpdated(new Date(generatedAt));
+      } catch (snapshotErr) {
+        setError("Recherche en direct indisponible ici, et aucun instantané programmé n'est encore accessible (news.json). Sur le site public, les mises à jour arrivent via une GitHub Action planifiée — voir le README pour l'activer.");
+      }
+    }
+    finally {
       setLoading(false);
     }
   };
