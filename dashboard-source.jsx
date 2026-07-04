@@ -1,0 +1,890 @@
+import { useState, useMemo, useRef, useEffect } from "react";
+import * as d3 from "d3";
+
+/* ------------------------------------------------------------------ */
+/*  SEED DATA — snapshot compiled from L'Usine Nouvelle, Zone Militaire /
+    Opex360, The Verge, Breaking Defense, TechCrunch, Reuters/Al Jazeera,
+    SCMP, CNBC, Aviation Week, Aerospace Global News, Jerusalem Post/Ctech,
+    Crunchbase News, TechWire Asia, Digitimes, RoboticsTomorrow, McKinsey,
+    Zone Armée, Aeroflap, Zonebourse, La Libre, SPA, L'Essentiel de l'Éco…
+    Each item links to the real page it was drawn from. This is a starting
+    snapshot — use "Actualiser" to pull fresh items live from the web.    */
+/* ------------------------------------------------------------------ */
+
+const CATS = {
+  innovation: { label: "Innovation", color: "#3FA9A0" },
+  defense: { label: "Défense", color: "#C1553F" },
+  industrie: { label: "Industrie", color: "#5C7CA6" },
+};
+
+const SEED_NEWS = [
+  { id: 1, country: "France", flag: "🇫🇷", category: "defense", date: "30 juin 2026", source: "L'Usine Nouvelle",
+    title: "Harmattan AI devient le premier droniste des armées françaises",
+    summary: "La pépite française décroche une commande supplémentaire de 5 000 drones auprès de la DGA, s'arrogeant la moitié des commandes de l'année. Sa future usine francilienne doit atteindre 10 000 drones par mois d'ici fin 2026.",
+    companies: ["Harmattan AI", "DGA"], trends: ["Guerre des drones", "Souveraineté technologique"],
+    url: "https://www.linkedin.com/company/l-usine-nouvelle/" },
+  { id: 2, country: "France", flag: "🇫🇷", category: "industrie", date: "28 juin 2026", source: "L'Usine Nouvelle",
+    title: "Safran Electronics & Defense réorganise son outil industriel",
+    summary: "Le site de Mantes-la-Ville doit fermer, ses activités étant transférées vers deux sites montant en puissance sur l'aviation civile et la défense.",
+    companies: ["Safran"], trends: ["Consolidation industrielle"],
+    url: "https://www.usinenouvelle.com/quotidien-des-usines/" },
+  { id: 3, country: "France", flag: "🇫🇷", category: "industrie", date: "27 juin 2026", source: "L'Usine Nouvelle",
+    title: "EDF réinternalise la production de pièces critiques des EPR2",
+    summary: "Plusieurs centaines de millions d'euros sont investis pour rapatrier la fabrication de composants sensibles chez Framatome et Arabelle Solutions.",
+    companies: ["EDF", "Framatome", "Arabelle Solutions"], trends: ["Souveraineté technologique"],
+    url: "https://www.usinenouvelle.com/quotidien-des-usines/" },
+  { id: 4, country: "France", flag: "🇫🇷", category: "defense", date: "15 juin 2026", source: "L'Usine Nouvelle",
+    title: "Lance-roquettes souverain : Paris tranche entre deux consortiums",
+    summary: "À l'ouverture d'Eurosatory, la ministre des Armées Catherine Vautrin ouvre des négociations exclusives avec MBDA et Safran, écartant le tandem Thales/ArianeGroup pour la fourniture du futur lance-roquettes.",
+    companies: ["MBDA", "Safran", "Thales", "ArianeGroup"], trends: ["Réarmement", "Souveraineté technologique"],
+    url: "https://www.usinenouvelle.com/aero-spatial/safran/" },
+  { id: 5, country: "France", flag: "🇫🇷", category: "innovation", date: "7 mai 2026", source: "Usine Nouvelle / Safran",
+    title: "Safran et la start-up Quandela explorent le calcul quantique",
+    summary: "Un projet de recherche de deux ans doit préparer de futurs algorithmes quantiques capables d'affiner la simulation des écoulements dans les moteurs d'avion.",
+    companies: ["Safran", "Quandela"], trends: ["IA physique & robotique"],
+    url: "https://www.usinenouvelle.com/aero-spatial/safran/" },
+  { id: 6, country: "France", flag: "🇫🇷", category: "defense", date: "10 juin 2026", source: "L'Usine Nouvelle",
+    title: "Un démonstrateur anti-drones commandé à quatre industriels",
+    summary: "La DGA a confié à MBDA, Safran, Thales et Cilas le développement du démonstrateur Syderal, destiné à neutraliser drones, roquettes et mortiers à distance.",
+    companies: ["MBDA", "Safran", "Thales", "Cilas", "DGA"], trends: ["Guerre des drones", "Réarmement"],
+    url: "https://www.usinenouvelle.com/aero-spatial/safran/" },
+  { id: 7, country: "Allemagne", flag: "🇩🇪", category: "defense", date: "11 mars 2026", source: "Breaking Defense",
+    title: "Rheinmetall vise 45 % de croissance en 2026",
+    summary: "Le groupe allemand table sur un chiffre d'affaires de 14,5 milliards d'euros, porté par une demande record des forces armées pour véhicules, munitions et drones. Ses commandes domestiques pourraient atteindre 32 milliards d'euros.",
+    companies: ["Rheinmetall"], trends: ["Réarmement"],
+    url: "https://breakingdefense.com/2026/03/germanys-rheinmetall-predicts-16-8b-annual-order-boom-will-focus-entirely-on-defense/" },
+  { id: 8, country: "Allemagne", flag: "🇩🇪", category: "defense", date: "24 juin 2026", source: "CNBC",
+    title: "Berlin annule le programme de frégates F126, Rheinmetall dévisse",
+    summary: "L'Allemagne renonce à six frégates F126 au profit de huit corvettes Meko A-200 plus petites, commandées à TKMS. Le titre Rheinmetall perd jusqu'à 18 %, Hensoldt et Renk chutent aussi.",
+    companies: ["Rheinmetall", "TKMS", "Hensoldt", "Renk"], trends: ["Réarmement", "Marine & sous-marins"],
+    url: "https://www.cnbc.com/2026/06/24/rheinmetall-stock-defense-germany-warship-scrap-plans.html" },
+  { id: 9, country: "Allemagne", flag: "🇩🇪", category: "defense", date: "7 mai 2026", source: "The Defense Post",
+    title: "Rheinmetall accélère son expansion navale",
+    summary: "Après le rachat du chantier Naval Vessels Luerssen, le groupe fait une offre non contraignante sur German Naval Yards, actuellement détenu par le français CMN Naval.",
+    companies: ["Rheinmetall", "Naval Vessels Luerssen", "CMN Naval"], trends: ["Consolidation industrielle", "Marine & sous-marins"],
+    url: "https://thedefensepost.com/2026/05/07/rheinmetall-offer-germany-naval-yard/" },
+  { id: 10, country: "Allemagne", flag: "🇩🇪", category: "defense", date: "1 juillet 2026", source: "GuruFocus",
+    title: "Berlin et Washington discutent d'une coproduction d'armement",
+    summary: "Le titre Rheinmetall progresse après des informations sur une collaboration germano-américaine visant à coproduire des missiles Tomahawk longue portée et des intercepteurs PAC-3 pour les systèmes Patriot.",
+    companies: ["Rheinmetall", "Lockheed Martin"], trends: ["Réarmement"],
+    url: "https://www.gurufocus.com/news/8941254/rheinmetall-rnmbf-sees-5-rise-amid-usgermany-defense-partnership-talks" },
+  { id: 11, country: "États-Unis", flag: "🇺🇸", category: "defense", date: "28 mai 2026", source: "ExecutiveGov",
+    title: "Le budget FY27 de l'US Air Force muscle l'aviation de 6ᵉ génération",
+    summary: "3 milliards de dollars supplémentaires sont demandés pour le chasseur furtif F-47 de Boeing, appelé à voler aux côtés de drones autonomes du programme Collaborative Combat Aircraft.",
+    companies: ["Boeing", "Lockheed Martin", "Northrop Grumman", "General Atomics", "Anduril"], trends: ["Réarmement"],
+    url: "https://www.executivegov.com/articles/air-force-fy27-budget-hypersonics-autonomy" },
+  { id: 12, country: "États-Unis", flag: "🇺🇸", category: "defense", date: "24 juin 2026", source: "Aviation Week",
+    title: "Lockheed dévoile un planeur hypersonique low-cost",
+    summary: "Le nouveau concept NXGB doit réduire drastiquement les coûts de production après que l'US Army a annoncé vouloir abandonner l'actuel Long Range Hypersonic Weapon, trop cher à produire en série.",
+    companies: ["Lockheed Martin", "Northrop Grumman", "Castelion"], trends: ["Hypersoniques"],
+    url: "https://aviationweek.com/defense/missile-defense-weapons/lockheed-unveils-low-cost-hypersonic-glide-missile" },
+  { id: 13, country: "États-Unis", flag: "🇺🇸", category: "innovation", date: "3 juillet 2026", source: "The Verge",
+    title: "Nvidia minimise l'impact hydrique de ses data centers IA",
+    summary: "Face à une opposition publique croissante (70 % des Américains y seraient défavorables selon Gallup), Nvidia affirme que sa nouvelle génération de puces réduit fortement la consommation d'eau.",
+    companies: ["Nvidia"], trends: ["IA & entreprise"],
+    url: "https://markmcneilly.substack.com/p/the-new-news-in-ai-7326-edition" },
+  { id: 14, country: "États-Unis", flag: "🇺🇸", category: "innovation", date: "3 juillet 2026", source: "The Verge",
+    title: "Ford réembauche en urgence après un pari raté sur l'IA",
+    summary: "Le constructeur a dû rappeler et former des centaines d'ingénieurs expérimentés après que ses systèmes de conception assistés par IA ont provoqué une vague de rappels de véhicules.",
+    companies: ["Ford"], trends: ["IA & entreprise"],
+    url: "https://markmcneilly.substack.com/p/the-new-news-in-ai-7326-edition" },
+  { id: 15, country: "États-Unis", flag: "🇺🇸", category: "innovation", date: "2 juillet 2026", source: "TechCrunch",
+    title: "Microsoft lance sa propre unité de déploiement d'IA d'entreprise",
+    summary: "\"Microsoft Frontier Company\" mobilise 2,5 milliards de dollars et 6 000 experts pour accompagner directement les grands clients dans le déploiement de ses outils d'IA.",
+    companies: ["Microsoft"], trends: ["IA & entreprise", "Financement IA"],
+    url: "https://techcrunch.com/2026/07/02/microsoft-launches-its-own-ai-deployment-company-with-2-5-billion-commitment/" },
+  { id: 16, country: "États-Unis", flag: "🇺🇸", category: "innovation", date: "26 juin 2026", source: "Crunchbase News",
+    title: "Baseten lève 1,5 Md$, la defense-tech Stark 569 M$",
+    summary: "Parmi les plus grosses levées de la semaine : l'infrastructure d'inférence IA Baseten (série F) et la start-up berlinoise de défense Stark, soutenue par Founders Fund et Sequoia.",
+    companies: ["Baseten", "Stark"], trends: ["Financement IA"],
+    url: "https://news.crunchbase.com/venture/biggest-funding-rounds-ai-marketing-robotics-baseten/" },
+  { id: 17, country: "États-Unis", flag: "🇺🇸", category: "innovation", date: "20 juin 2026", source: "Crunchbase News",
+    title: "88 % des financements IA vont à des entreprises américaines",
+    summary: "OpenAI, Anthropic et xAI captent l'essentiel des méga-levées mondiales en 2026, accentuant la concentration géographique du capital-risque autour de l'intelligence artificielle.",
+    companies: ["OpenAI", "Anthropic", "xAI"], trends: ["Financement IA"],
+    url: "https://news.crunchbase.com/venture/us-ai-startup-funding-boom-data/" },
+  { id: 18, country: "États-Unis", flag: "🇺🇸", category: "industrie", date: "1 juin 2026", source: "Al Jazeera",
+    title: "Washington resserre l'étau sur l'exportation de puces IA",
+    summary: "Le Department of Commerce précise que ses restrictions s'appliquent aussi aux filiales de groupes chinois situées hors de Chine, fermant une brèche que Nvidia aurait exploitée.",
+    companies: ["Nvidia", "AMD", "Intel", "TSMC"], trends: ["Semi-conducteurs & export controls"],
+    url: "https://www.aljazeera.com/economy/2026/6/1/us-says-ban-on-ai-chip-shipments-applies-to-chinese-firms-outside-china" },
+  { id: 19, country: "Chine", flag: "🇨🇳", category: "industrie", date: "6 mai 2026", source: "TechWire Asia",
+    title: "Huawei accélère malgré les sanctions américaines",
+    summary: "Le chiffre d'affaires des puces IA de Huawei devrait bondir de 60 % à 12 milliards de dollars en 2026, tandis que Cambricon et CXMT montent en puissance pour réduire la dépendance chinoise à Nvidia.",
+    companies: ["Huawei", "Cambricon", "CXMT"], trends: ["Semi-conducteurs & export controls"],
+    url: "https://techwireasia.com/2026/05/china-semiconductor-self-sufficiency-wafer-target-2026/" },
+  { id: 20, country: "Chine", flag: "🇨🇳", category: "industrie", date: "20 février 2026", source: "American Affairs Journal",
+    title: "La Chine pousse ses fondeurs vers les nœuds avancés",
+    summary: "SMIC et Hua Hong intensifient leurs efforts de gravure avancée par multi-patterning, une méthode plus coûteuse mais qui contourne partiellement les restrictions sur les équipements EUV.",
+    companies: ["SMIC", "Hua Hong", "CXMT"], trends: ["Semi-conducteurs & export controls"],
+    url: "https://americanaffairsjournal.org/2026/02/innovation-under-pressure-chinas-semiconductor-industry-at-a-crossroads/" },
+  { id: 21, country: "Japon", flag: "🇯🇵", category: "innovation", date: "30 juin 2026", source: "Let's Data Science",
+    title: "Tokyo mise 6,2 Md$ sur l'IA physique avec le consortium Noetra",
+    summary: "Piloté par SoftBank, Sony, NEC et Honda, ce programme public vise le déploiement de 10 millions de robots dotés d'IA dans 18 secteurs d'ici 2040.",
+    companies: ["SoftBank", "Sony", "NEC", "Honda", "Toyota"], trends: ["IA physique & robotique"],
+    url: "https://letsdatascience.com/news/japan-targets-sovereign-ai-model-and-10-million-robots-83b74c54" },
+  { id: 22, country: "Japon", flag: "🇯🇵", category: "innovation", date: "9 mars 2026", source: "The Japan Times",
+    title: "Une start-up d'anciens de Google démarche les industriels japonais",
+    summary: "Integral AI, fondée par d'anciens chercheurs de Google, discute avec Toyota, Sony, Honda, Nissan et Mitsui Chemicals pour apprendre aux robots industriels de nouvelles tâches par observation.",
+    companies: ["Integral AI", "Toyota", "Sony", "Honda", "Nissan", "Denso"], trends: ["IA physique & robotique"],
+    url: "https://www.japantimes.co.jp/business/2026/03/09/companies/integral-ai-tokyo-startup/" },
+  { id: 23, country: "Japon", flag: "🇯🇵", category: "innovation", date: "28 mai 2026", source: "RoboticsTomorrow",
+    title: "Tokyo accueille le premier Humanoids Summit d'Asie",
+    summary: "Toyota, Honda, Panasonic, Boston Dynamics et Unitree se retrouvent autour des robots humanoïdes, alors que le Japon cherche à compenser sa pénurie de main-d'œuvre par l'automatisation.",
+    companies: ["Toyota", "Honda", "Panasonic", "Boston Dynamics", "Unitree"], trends: ["IA physique & robotique"],
+    url: "https://www.roboticstomorrow.com/news/2026/04/08/global-robotics-industry-converges-on-japan-for-humanoids-summit-tokyo-2026/26378/" },
+  { id: 24, country: "Inde", flag: "🇮🇳", category: "defense", date: "27 mai 2026", source: "Indian Defence News",
+    title: "L'Inde maîtrise les puces radar au nitrure de gallium",
+    summary: "Le DRDO devient le 7ᵉ acteur mondial à percer cette technologie, après le refus de la France de la transférer dans le cadre de l'accord Rafale — un revers transformé en déclic industriel.",
+    companies: ["DRDO", "Dassault"], trends: ["Souveraineté technologique"],
+    url: "https://www.indiandefensenews.in/2026/05/india-joins-elite-club-as-drdo.html" },
+  { id: 25, country: "Inde", flag: "🇮🇳", category: "defense", date: "26 mai 2026", source: "Indian Defence News",
+    title: "Adani Defence et le DRDO multiplient les essais réussis",
+    summary: "Missile antinavire indigène, kit de guidage de précision et systèmes anti-drones montés sur véhicule illustrent la montée en puissance du modèle de partenariat public-privé indien.",
+    companies: ["Adani Defence", "DRDO", "Bharat Dynamics"], trends: ["Souveraineté technologique"],
+    url: "https://www.indiandefensenews.in/2026/05/adani-defence-and-drdo-drive.html" },
+  { id: 26, country: "Inde", flag: "🇮🇳", category: "defense", date: "20 juin 2026", source: "Defence News India",
+    title: "Nouveau S-400 russe en vue, en parallèle du programme Kusha",
+    summary: "New Delhi négocierait un second contrat S-400 avec Moscou fin 2026, tout en développant Kusha, son propre bouclier antimissile longue portée, pour réduire sa dépendance aux fournisseurs étrangers.",
+    companies: ["DRDO"], trends: ["Souveraineté technologique"],
+    url: "https://defence.in/threads/india-expected-to-sign-second-s-400-deal-with-russia-by-late-2026-with-target-for-initial-deliveries-in-2028.18051/" },
+  { id: 27, country: "Inde", flag: "🇮🇳", category: "defense", date: "13 février 2026", source: "Indian Defence News",
+    title: "Vers un transfert de technologie complet pour le moteur de l'AMCA",
+    summary: "HAL, Tata Advanced Systems et L&T sont en lice pour le futur avion de transport indien, tandis que Safran et le DRDO avancent sur un accord de transfert total pour le moteur du chasseur AMCA.",
+    companies: ["HAL", "Tata Advanced Systems", "L&T", "Safran", "DRDO"], trends: ["Souveraineté technologique", "Réarmement"],
+    url: "https://www.indiandefensenews.in/2026/02/defence-acquisition-procedure-dap-2026.html" },
+  { id: 28, country: "Israël", flag: "🇮🇱", category: "defense", date: "2 janvier 2026", source: "Breaking Defense",
+    title: "Les trois grands industriels israéliens visent l'Europe et l'Asie",
+    summary: "Après des ventes record portées par des systèmes testés au combat, Elbit Systems, Rafael et Israel Aerospace Industries cherchent à percer sur de nouveaux marchés, dont la Grèce pour la défense antiaérienne.",
+    companies: ["Elbit Systems", "Rafael", "Israel Aerospace Industries"], trends: ["Réarmement"],
+    url: "https://breakingdefense.com/2026/01/israeli-defense-industry-looks-to-capitalize-on-hard-won-combat-lessons-2026-preview/" },
+  { id: 29, country: "Israël", flag: "🇮🇱", category: "defense", date: "10 décembre 2025", source: "The Jerusalem Post",
+    title: "Le ministère de la Défense mise sur les start-ups plutôt que sur les mastodontes",
+    summary: "Au moins 10 % du budget R&D 2026 ira aux jeunes pousses plutôt qu'aux trois grands groupes, avec l'émergence de Kela, un challenger sur les systèmes de commandement.",
+    companies: ["Kela", "Elbit Systems", "Rafael", "Israel Aerospace Industries"], trends: ["Financement IA"],
+    url: "https://www.jpost.com/defense-and-tech/article-879734" },
+  { id: 30, country: "Israël", flag: "🇮🇱", category: "defense", date: "30 juin 2026", source: "The Jerusalem Post",
+    title: "Anduril s'implante en Israël et s'associe à Elbit",
+    summary: "La pépite américaine de la défense propose avec Elbit un système d'artillerie pour l'US Army et espère utiliser les entreprises israéliennes comme tremplin vers les marchés européens.",
+    companies: ["Anduril", "Elbit Systems", "Oshkosh"], trends: ["Réarmement"],
+    url: "https://www.jpost.com/defense-and-tech/article-900917" },
+  { id: 31, country: "Royaume-Uni", flag: "🇬🇧", category: "defense", date: "1 juillet 2026", source: "Aerospace Global News",
+    title: "Londres investit 5 milliards de livres dans les drones",
+    summary: "L'annonce doit transformer les capacités de l'Armée de terre, de la Royal Navy et de la RAF face à la multiplication des menaces de drones sur les théâtres actuels.",
+    companies: ["Ministère de la Défense (UK)"], trends: ["Guerre des drones", "Réarmement"],
+    url: "https://aerospaceglobalnews.com/" },
+  { id: 32, country: "Ukraine", flag: "🇺🇦", category: "defense", date: "1 juillet 2026", source: "Aerospace Global News",
+    title: "Kiev signe pour des Gripen E suédois",
+    summary: "Un contrat de 2,5 milliards de dollars avec Saab doit poser les bases de la future armée de l'air ukrainienne.",
+    companies: ["Saab"], trends: ["Réarmement"],
+    url: "https://aerospaceglobalnews.com/" },
+  { id: 33, country: "États-Unis", flag: "🇺🇸", category: "innovation", date: "29 juin 2026", source: "Aerospace Global News",
+    title: "Rocket Lab rachète Iridium pour 8 milliards de dollars",
+    summary: "L'opération rebat les cartes du marché des communications satellitaires et illustre la vague de consolidation en cours dans le secteur spatial.",
+    companies: ["Rocket Lab", "Iridium"], trends: ["Consolidation industrielle"],
+    url: "https://aerospaceglobalnews.com/" },
+  { id: 34, country: "Corée du Sud", flag: "🇰🇷", category: "defense", date: "1 juillet 2026", source: "Aerospace Global News",
+    title: "Séoul teste ses défenses anti-essaims de drones",
+    summary: "Un exercice de grande ampleur démontre qu'aucun système isolé ne suffit à arrêter une attaque coordonnée de drones, obligeant à combiner plusieurs couches de défense.",
+    companies: ["Forces armées sud-coréennes"], trends: ["Guerre des drones"],
+    url: "https://aerospaceglobalnews.com/" },
+  { id: 35, country: "États-Unis", flag: "🇺🇸", category: "innovation", date: "1 juillet 2026", source: "L'Usine Nouvelle",
+    title: "Claude Sonnet 5 lancé sous surveillance de Washington",
+    summary: "Anthropic déploie son nouveau modèle tandis que Claude Fable 5 et Mythos 5 retrouvent le marché après une suspension temporaire liée aux contrôles à l'export américains.",
+    companies: ["Anthropic"], trends: ["IA & entreprise", "Semi-conducteurs & export controls"],
+    url: "https://www.usinenouvelle.com/" },
+  { id: 36, country: "France", flag: "🇫🇷", category: "industrie", date: "juin 2026", source: "L'Usine Nouvelle",
+    title: "Le verrier Arc redémarre aux Émirats, Waymo s'installe en France",
+    summary: "Alors que les tensions régionales s'apaisent, le fabricant de verre Arc relance son usine émiratie ; en parallèle, Waymo ouvre discrètement une filiale française pour étendre ses ambitions de taxis autonomes en Europe.",
+    companies: ["Arc", "Waymo"], trends: ["IA & entreprise"],
+    url: "https://www.usinenouvelle.com/" },
+  { id: 37, country: "États-Unis", flag: "🇺🇸", category: "innovation", date: "1 juillet 2026", source: "TechCrunch",
+    title: "La course aux véhicules autonomes rejoue le scénario de 2016",
+    summary: "Le fondateur d'Uber Travis Kalanick relance une entreprise de robotique tandis que capitaux et talents affluent de nouveau vers l'autonomie, portés par ceux qui ont vécu la première vague.",
+    companies: ["Humble Robotics"], trends: ["IA physique & robotique", "Financement IA"],
+    url: "https://techcrunch.com/" },
+  { id: 38, country: "Taïwan", flag: "🇹🇼", category: "industrie", date: "15 juin 2026", source: "DigiTimes",
+    title: "SK Hynix et Foxconn resserreraient leurs liens sur l'IA",
+    summary: "Alors que le secteur taïwanais de la conception de puces enregistre ses meilleurs gains depuis des années, des discussions viseraient à approfondir la chaîne d'approvisionnement IA entre Taïwan et la Corée du Sud.",
+    companies: ["SK Hynix", "Foxconn"], trends: ["Chaînes d'approvisionnement", "Semi-conducteurs & export controls"],
+    url: "https://www.digitimes.com/news/a20260615PD212/substrate-exports-capacity-2026-market.html" },
+  { id: 39, country: "Brésil", flag: "🇧🇷", category: "defense", date: "24 avril 2026", source: "Aeroflap",
+    title: "Embraer veut aussi construire des frégates",
+    summary: "Un protocole d'accord avec le ministère brésilien de la Défense et l'allemand TKMS ouvre la voie à un second lot de quatre frégates Tamandaré, prolongeant le transfert de technologie naval entre les deux pays.",
+    companies: ["Embraer", "TKMS"], trends: ["Marine & sous-marins", "Souveraineté technologique"],
+    url: "https://www.aeroflap.com.br/fr/Embraer-ne-se-contente-pas-de-construire-des-avions-et-ambitionne-de-b%C3%A2tir-des-fr%C3%A9gates./" },
+  { id: 40, country: "Brésil", flag: "🇧🇷", category: "industrie", date: "26 mars 2026", source: "Zonebourse",
+    title: "Premier chasseur Gripen E assemblé au Brésil",
+    summary: "Fruit d'une coopération entre Embraer, Saab et la force aérienne brésilienne, cet appareil fait entrer le pays dans le cercle restreint des nations capables de produire des chasseurs supersoniques avancés.",
+    companies: ["Embraer", "Saab"], trends: ["Souveraineté technologique"],
+    url: "https://www.zonebourse.com/actualite-bourse/embraer-devoile-le-premier-chasseur-gripen-e-produit-au-bresil-ce7e51dad188f123" },
+  { id: 41, country: "Émirats arabes unis", flag: "🇦🇪", category: "innovation", date: "juin 2025", source: "LesNews",
+    title: "Stargate UAE : un géant du calcul IA prend forme dans le Golfe",
+    summary: "Porté par OpenAI, G42, Oracle, Nvidia et SoftBank, ce hub de data centers doit atteindre 1 gigawatt de capacité, dont 200 mégawatts dès 2026.",
+    companies: ["OpenAI", "G42", "Oracle", "Nvidia", "SoftBank"], trends: ["IA & entreprise"],
+    url: "https://lesnews.ca/intelligence-artificielle/arabie-saoudite-et-emirats-en-course-pour-la-suprematie-de-lia-au-moyen-orient/" },
+  { id: 42, country: "Arabie saoudite", flag: "🇸🇦", category: "industrie", date: "28 avril 2026", source: "Agence de presse saoudienne (SPA)",
+    title: "Riyad multiplie les data centers pour son ambition IA",
+    summary: "La capacité opérationnelle du royaume est passée de 68 à plus de 440 mégawatts en quatre ans, avec plus de 60 centres de données désormais en service, dans le cadre de Vision 2030.",
+    companies: ["NEOM"], trends: ["IA & entreprise"],
+    url: "https://spa.gov.sa/fr/N2572947" },
+  { id: 43, country: "Pologne", flag: "🇵🇱", category: "defense", date: "29 juin 2026", source: "Zone Militaire",
+    title: "Varsovie commande trois sous-marins A26 à Saab",
+    summary: "Le contrat de 4,6 milliards d'euros, notifié lors d'un sommet à Gdynia, met fin à sept mois de négociation. Saab l'emporte face à Naval Group, TKMS et Fincantieri dans le cadre du programme Orka.",
+    companies: ["Saab", "TKMS", "Naval Group"], trends: ["Réarmement", "Marine & sous-marins"],
+    url: "https://www.opex360.com/2026/06/29/la-pologne-confirme-la-commande-de-trois-sous-marins-de-type-a26-aupres-de-saab-pour-plus-de-4-milliards-deuros/" },
+  { id: 44, country: "Pologne", flag: "🇵🇱", category: "industrie", date: "30 mai 2026", source: "Forum Militaire",
+    title: "257 véhicules blindés Borsuk commandés, sur un total visé de 1 400",
+    summary: "Un nouveau contrat de 2,07 milliards de dollars porté par le consortium PGZ-HSW illustre le rythme de réarmement polonais, désormais porté à environ 4,8 % du PIB.",
+    companies: ["PGZ", "HSW"], trends: ["Réarmement", "Consolidation industrielle"],
+    url: "https://www.forum-militaire.fr/encore-146-vehicules-blindes-commandes-par-la-pologne-et-ce-nest-que-le-haut-de-liceberg-puisque-varsovie-en-voudrait-1-400-au-total-dici-dix-ans/" },
+  { id: 45, country: "Pologne", flag: "🇵🇱", category: "industrie", date: "juin 2026", source: "L'Essentiel de l'Éco",
+    title: "La Pologne, championne des dépenses OTAN, courtise les industriels français",
+    summary: "À Eurosatory 2026, Varsovie présente son écosystème de sous-traitance (PGM, réseau Łukasiewicz) aux groupes français et européens en quête de nouveaux partenaires de production.",
+    companies: ["PGZ"], trends: ["Réarmement", "Consolidation industrielle"],
+    url: "https://lessentieldeleco.fr/7284-eurosatory-2026-la-pologne-championne-des-depenses-de-defense-de-lotan-tend-la-main-aux-industriels-francais/" },
+  { id: 46, country: "Australie", flag: "🇦🇺", category: "defense", date: "22 mai 2026", source: "Zone Militaire",
+    title: "Canberra prolonge ses vieux sous-marins Collins jusqu'en 2040",
+    summary: "6,7 milliards d'euros doivent maintenir la flotte actuelle en service face aux retards du programme AUKUS, qui doit fournir à terme des sous-marins nucléaires américains et britanniques.",
+    companies: ["AUKUS"], trends: ["Marine & sous-marins", "Réarmement"],
+    url: "https://www.opex360.com/2026/05/22/laustralie-va-depenser-67-milliards-deuros-pour-garder-ses-vieux-sous-marins-de-type-collins-en-service-jusquen-2040/" },
+  { id: 47, country: "Australie", flag: "🇦🇺", category: "defense", date: "31 mai 2026", source: "La Libre",
+    title: "AUKUS revu : l'Australie recevra des sous-marins Virginia d'occasion",
+    summary: "Washington, Londres et Canberra simplifient l'accord initial : les trois submersibles nucléaires promis à l'Australie viendront directement de la flotte en service de l'US Navy plutôt que d'être neufs.",
+    companies: ["AUKUS"], trends: ["Marine & sous-marins", "Réarmement"],
+    url: "https://www.lalibre.be/international/oceanie/2026/05/31/laustralie-va-recevoir-des-sous-marins-americains-doccasion-dans-le-cadre-dun-accord-rationalise-4WOC2LNHOVDMZEHYCNSTGU4ENI/" },
+  { id: 48, country: "Italie", flag: "🇮🇹", category: "defense", date: "16 juin 2026", source: "Zone Armée",
+    title: "Leonardo dévoile son véhicule blindé amphibie à Eurosatory",
+    summary: "Le VBA, destiné à la marine italienne, combine mobilité, protection et modularité pour des opérations littorales — une vitrine de plus pour l'industriel transalpin sur le segment naval et terrestre.",
+    companies: ["Leonardo"], trends: ["Réarmement"],
+    url: "https://www.zonearmee.com/eurosatory-2026-leonardo-presente-le-vehicule-blinde-vba-pour-la-marine-italienne/" },
+  { id: 49, country: "Italie", flag: "🇮🇹", category: "industrie", date: "9 janvier 2026", source: "Atalayar",
+    title: "Leonardo bâtit un géant industriel entre Rome et Berlin",
+    summary: "Avec 17,8 milliards d'euros de chiffre d'affaires et 80 % d'exportations, le groupe italien a repris Iveco Defence Vehicles et formalisé une coentreprise à 50/50 avec Rheinmetall pour succéder au char Ariete — signe d'une consolidation accélérée de la BITD européenne.",
+    companies: ["Leonardo", "Rheinmetall", "Iveco Defence Vehicles"], trends: ["Consolidation industrielle", "Réarmement"],
+    url: "https://www.atalayar.com/en/articulo/new-technologies-innovation/leonardo-italys-leading-technology-voice-in-the-aerospace-and-defence-sector/20260109190000222200.html" },
+  { id: 50, country: "Italie", flag: "🇮🇹", category: "defense", date: "19 mai 2026", source: "IREFI / Le Monde",
+    title: "Changement de direction chez Leonardo en pleine montée en cadence",
+    summary: "Lorenzo Mariani prend la tête du groupe avec un profil industriel affirmé, chargé notamment de superviser le GCAP, le chasseur de 6ᵉ génération développé avec BAE Systems et Mitsubishi Heavy Industries.",
+    companies: ["Leonardo", "BAE Systems", "Mitsubishi Heavy Industries"], trends: ["Réarmement", "Consolidation industrielle"],
+    url: "https://irefi.eu/lorenzo-mariani-prend-les-renes-de-leonardo-un-tournant-industriel-pour-le-geant-italien-de-la-defense/" },
+  { id: 51, country: "Canada", flag: "🇨🇦", category: "defense", date: "9 mars 2026", source: "Gouvernement du Canada",
+    title: "Ottawa investit 900 M$ dans sa nouvelle stratégie industrielle de défense",
+    summary: "Le Conseil national de recherches finance des capacités souveraines en drones, quantique et biomédical, via un nouveau Drone Innovation Hub et un partenariat renforcé avec l'industrie canadienne.",
+    companies: ["Conseil national de recherches Canada"], trends: ["Souveraineté technologique", "Réarmement"],
+    url: "https://www.canada.ca/en/innovation-science-economic-development/news/2026/03/canada-advances-defence-industrial-strategy-to-strengthen-security-sovereignty-and-prosperity.html" },
+  { id: 52, country: "Canada", flag: "🇨🇦", category: "innovation", date: "17 février 2026", source: "Cabinet du Premier ministre du Canada",
+    title: "Carney lance la première stratégie industrielle de défense du pays",
+    summary: "Le nouveau bureau BOREALIS doit coordonner la recherche de pointe en IA, quantique et systèmes autonomes, avec l'objectif de porter à 70 % la part des acquisitions confiées à des entreprises canadiennes.",
+    companies: ["BOREALIS", "Conseil national de recherches Canada"], trends: ["Souveraineté technologique"],
+    url: "https://www.pm.gc.ca/en/news/news-releases/2026/02/17/prime-minister-carney-launches-canadas-first-defence-industrial" },
+  { id: 53, country: "Turquie", flag: "🇹🇷", category: "defense", date: "3 février 2026", source: "Türkiye Today",
+    title: "Baykar bat son record à 2,2 milliards de dollars d'exportations",
+    summary: "Le turc reste pour la troisième année consécutive le premier exportateur mondial de drones armés ; son drone de combat Kizilelma doit entrer en service en 2026.",
+    companies: ["Baykar", "Roketsan"], trends: ["Guerre des drones", "Réarmement"],
+    url: "https://www.turkiyetoday.com/nation/baykar-sets-22b-export-record-kizilelma-to-enter-inventory-in-2026-3213966" },
+  { id: 54, country: "Turquie", flag: "🇹🇷", category: "innovation", date: "16 mars 2026", source: "Breaking Defense",
+    title: "Baykar dévoile son drone kamikaze K2 doté d'IA d'essaim",
+    summary: "Le nouvel appareil a réussi des vols de formation autonomes à cinq exemplaires, une capacité jugée décisive pour son potentiel à l'export dans un marché mondial très concurrentiel.",
+    companies: ["Baykar"], trends: ["Guerre des drones", "IA physique & robotique"],
+    url: "https://breakingdefense.com/2026/03/baykar-unveils-k2-kamikaze-drone-with-swarming-capabilities/" },
+  { id: 55, country: "Turquie", flag: "🇹🇷", category: "industrie", date: "8 janvier 2026", source: "War on the Rocks",
+    title: "Après avoir racheté l'italien Piaggio, Baykar s'allie à Leonardo",
+    summary: "La coentreprise LBA Systems doit combiner les plateformes turques et les capteurs italiens pour produire des drones conformes aux standards de l'OTAN, avec un premier prototype attendu en 2026.",
+    companies: ["Baykar", "Leonardo"], trends: ["Consolidation industrielle", "Réarmement"],
+    url: "https://warontherocks.com/2026/01/turkeys-drone-industry-at-a-strategic-crossroads" },
+  { id: 56, country: "Indonésie", flag: "🇮🇩", category: "defense", date: "13 mai 2026", source: "Defence Industry EU",
+    title: "L'Indonésie commande 12 drones de combat Kizilelma à Baykar",
+    summary: "Premier contrat export de ce modèle turc, il prévoit aussi une production, une maintenance et une formation locales, avec une option pour 48 appareils supplémentaires.",
+    companies: ["Baykar", "Republikorp"], trends: ["Guerre des drones", "Souveraineté technologique"],
+    url: "https://defence-industry.eu/turkiyes-baykar-secures-first-export-order-for-bayraktar-kizilelma-combat-drones-from-indonesia/" },
+  { id: 57, country: "Afrique du Sud", flag: "🇿🇦", category: "industrie", date: "6 janvier 2026", source: "Wikipédia",
+    title: "Denel reste connecté aux grands groupes européens malgré ses difficultés",
+    summary: "Le sud-africain conserve une coentreprise de munitions avec l'allemand Rheinmetall (Rheinmetall Denel Munition) et une participation dans l'optronique aux côtés d'Airbus Defence and Space.",
+    companies: ["Denel", "Rheinmetall", "Airbus Defence and Space"], trends: ["Consolidation industrielle"],
+    url: "https://fr.wikipedia.org/wiki/Denel_(Afrique_du_Sud)" },
+  { id: 58, country: "Afrique du Sud", flag: "🇿🇦", category: "innovation", date: "18 mai 2026", source: "Africa News Agency",
+    title: "Pretoria consacre 572 millions de dollars à l'innovation",
+    summary: "Ce budget 2026-2027 doit financer l'intelligence artificielle, la fabrication de vaccins et les infrastructures scientifiques, avec l'objectif de porter la R&D à 1,5 % du PIB.",
+    companies: [], trends: ["IA & entreprise"],
+    url: "https://africa-news-agency.com/afrique-du-sud-572-millions-pour-accelerer-linnovation-et-la-recherche/" },
+  { id: 59, country: "Maroc", flag: "🇲🇦", category: "industrie", date: "27 mai 2026", source: "Le Desk",
+    title: "Le Maroc détrône l'Afrique du Sud à la tête de l'industrie africaine",
+    summary: "Porté par l'automobile et une filière aéronautique qui a attiré Boeing, Safran et Airbus autour de Casablanca et Tanger, le royaume prend la première place du nouveau baromètre industriel de la BAD.",
+    companies: ["Boeing", "Safran", "Airbus"], trends: ["Consolidation industrielle"],
+    url: "https://ledesk.ma/datadesk/le-maroc-detrone-lafrique-du-sud-a-la-tete-de-lindustrie-africaine/" },
+];
+
+/* ------------------------------------------------------------------ */
+/*  LIVE REFRESH — calls the Anthropic API (web search tool) directly   */
+/*  from the artifact to pull fresh items from anywhere in the world.   */
+/* ------------------------------------------------------------------ */
+
+const REFRESH_PROMPT = `Tu es un service de veille internationale. Cherche sur le web des actualités RÉCENTES (derniers jours) sur la technologie, l'innovation, l'industrie et la défense, partout dans le monde — ne te limite pas aux grandes puissances habituelles (France, États-Unis, Chine, Allemagne) : cherche aussi activement des actualités provenant d'Amérique latine, d'Afrique, d'Asie du Sud-Est, d'Europe de l'Est ou du Sud, du Moyen-Orient et d'Océanie.
+
+Réponds EXCLUSIVEMENT avec un tableau JSON valide, sans texte autour, sans balises markdown ni \`\`\`. Chaque objet du tableau doit suivre exactement ce schéma :
+{
+  "country": "nom du pays en français",
+  "flag": "emoji drapeau du pays",
+  "category": "innovation" | "defense" | "industrie",
+  "date": "date approximative en français",
+  "source": "nom du média",
+  "title": "titre factuel court, max 12 mots, en français",
+  "summary": "résumé reformulé en français en 1-2 phrases, jamais recopié mot pour mot",
+  "companies": ["2 à 5 entreprises ou organisations citées"],
+  "trends": ["1 à 2 thèmes courts en français"],
+  "url": "URL réelle de la page trouvée"
+}
+
+Renvoie entre 6 et 10 objets, avec au moins 5 pays différents et au moins une actualité de chaque catégorie (innovation, defense, industrie).`;
+
+function extractJsonArray(text) {
+  const start = text.indexOf("[");
+  const end = text.lastIndexOf("]");
+  if (start === -1 || end === -1 || end <= start) throw new Error("Aucun JSON exploitable dans la réponse.");
+  return JSON.parse(text.slice(start, end + 1));
+}
+
+async function fetchFreshNews() {
+  const resp = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-6",
+      max_tokens: 1000,
+      messages: [{ role: "user", content: REFRESH_PROMPT }],
+      tools: [{ type: "web_search_20250305", name: "web_search" }],
+    }),
+  });
+  if (!resp.ok) throw new Error(`Requête échouée (${resp.status})`);
+  const data = await resp.json();
+  const text = (data.content || [])
+    .filter((b) => b.type === "text")
+    .map((b) => b.text)
+    .join("\n");
+  const parsed = extractJsonArray(text);
+  if (!Array.isArray(parsed) || parsed.length === 0) throw new Error("Réponse vide ou invalide.");
+  const base = Date.now();
+  return parsed
+    .filter((it) => it && it.title && CATS[it.category])
+    .map((it, i) => ({
+      id: base + i,
+      country: it.country || "Inconnu",
+      flag: it.flag || "🌐",
+      category: it.category,
+      date: it.date || "récemment",
+      source: it.source || "Web",
+      title: String(it.title),
+      summary: it.summary ? String(it.summary) : "",
+      companies: Array.isArray(it.companies) ? it.companies.slice(0, 6).map(String) : [],
+      trends: Array.isArray(it.trends) ? it.trends.slice(0, 2).map(String) : [],
+      url: typeof it.url === "string" && it.url.startsWith("http") ? it.url : null,
+      fresh: true,
+    }));
+}
+
+/* ------------------------------------------------------------------ */
+/*  NETWORK GRAPH — company co-occurrence, laid out with d3-force.      */
+/*  Node color = the category most often associated with that company,  */
+/*  computed live from whatever is in the feed (fully dynamic).         */
+/* ------------------------------------------------------------------ */
+
+function useNetworkLayout(items, width, height) {
+  return useMemo(() => {
+    const counts = new Map();
+    const catCounts = new Map();
+    const linkMap = new Map();
+    items.forEach((n) => {
+      n.companies.forEach((c) => {
+        counts.set(c, (counts.get(c) || 0) + 1);
+        if (!catCounts.has(c)) catCounts.set(c, { innovation: 0, defense: 0, industrie: 0 });
+        const bucket = catCounts.get(c);
+        bucket[n.category] = (bucket[n.category] || 0) + 1;
+      });
+      for (let i = 0; i < n.companies.length; i++) {
+        for (let j = i + 1; j < n.companies.length; j++) {
+          const a = n.companies[i], b = n.companies[j];
+          const key = [a, b].sort().join("::");
+          linkMap.set(key, (linkMap.get(key) || 0) + 1);
+        }
+      }
+    });
+    const nodes = Array.from(counts.entries()).map(([id, count]) => {
+      const bucket = catCounts.get(id);
+      const sector = Object.entries(bucket).sort((a, b) => b[1] - a[1])[0][0];
+      return { id, count, sector };
+    });
+    const links = Array.from(linkMap.entries()).map(([key, weight]) => {
+      const [source, target] = key.split("::");
+      return { source, target, weight };
+    });
+    if (nodes.length === 0) return { nodes: [], links: [] };
+
+    const sim = d3.forceSimulation(nodes)
+      .force("link", d3.forceLink(links).id((d) => d.id).distance(58).strength(0.55))
+      .force("charge", d3.forceManyBody().strength(-90))
+      .force("center", d3.forceCenter(width / 2, height / 2))
+      .force("collide", d3.forceCollide((d) => 8 + d.count * 2.6))
+      .stop();
+    for (let i = 0; i < 320; i++) sim.tick();
+
+    const pad = 24;
+    nodes.forEach((n) => {
+      n.x = Math.max(pad, Math.min(width - pad, n.x));
+      n.y = Math.max(pad, Math.min(height - pad, n.y));
+    });
+    return { nodes, links };
+  }, [items, width, height]);
+}
+
+function NetworkGraph({ items, selectedCompany, onSelectCompany }) {
+  const wrapRef = useRef(null);
+  const [dims, setDims] = useState({ w: 320, h: 300 });
+
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver((entries) => {
+      const w = entries[0].contentRect.width;
+      setDims({ w: Math.max(260, w), h: Math.max(260, Math.min(360, w * 0.72)) });
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const { nodes, links } = useNetworkLayout(items, dims.w, dims.h);
+  const nodeById = useMemo(() => new Map(nodes.map((n) => [n.id, n])), [nodes]);
+
+  const connected = useMemo(() => {
+    if (!selectedCompany) return null;
+    const set = new Set([selectedCompany]);
+    links.forEach((l) => {
+      const sId = l.source.id || l.source, tId = l.target.id || l.target;
+      if (sId === selectedCompany) set.add(tId);
+      if (tId === selectedCompany) set.add(sId);
+    });
+    return set;
+  }, [selectedCompany, links]);
+
+  if (nodes.length === 0) {
+    return <div className="empty-graph">Aucun acteur à afficher pour ce filtre.</div>;
+  }
+
+  return (
+    <div ref={wrapRef} className="graph-wrap">
+      <svg width="100%" height={dims.h} viewBox={`0 0 ${dims.w} ${dims.h}`}>
+        <defs>
+          <radialGradient id="radarFade" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#E8A33D" stopOpacity="0.06" />
+            <stop offset="100%" stopColor="#E8A33D" stopOpacity="0" />
+          </radialGradient>
+        </defs>
+        <rect x="0" y="0" width={dims.w} height={dims.h} fill="url(#radarFade)" />
+        {[0.18, 0.32, 0.46].map((r, i) => (
+          <circle key={i} cx={dims.w / 2} cy={dims.h / 2} r={r * Math.min(dims.w, dims.h)}
+            fill="none" stroke="#24314A" strokeWidth="1" strokeDasharray="2 5" />
+        ))}
+        {links.map((l, i) => {
+          const s = typeof l.source === "object" ? l.source : nodeById.get(l.source);
+          const t = typeof l.target === "object" ? l.target : nodeById.get(l.target);
+          if (!s || !t) return null;
+          const dim = connected && !(connected.has(s.id) && connected.has(t.id));
+          return (
+            <line key={i} x1={s.x} y1={s.y} x2={t.x} y2={t.y}
+              stroke={dim ? "#1B2438" : "#5C7CA6"}
+              strokeOpacity={dim ? 0.4 : 0.85}
+              strokeWidth={Math.min(4, 0.8 + l.weight * 0.9)} />
+          );
+        })}
+        {nodes.map((n) => {
+          const r = 6 + n.count * 2.6;
+          const dim = connected && !connected.has(n.id);
+          const isSel = n.id === selectedCompany;
+          return (
+            <g key={n.id}
+              onClick={() => onSelectCompany(isSel ? null : n.id)}
+              style={{ cursor: "pointer" }}>
+              <circle cx={n.x} cy={n.y} r={r}
+                fill={CATS[n.sector].color}
+                fillOpacity={dim ? 0.25 : 0.9}
+                stroke={isSel ? "#E8A33D" : "#0B1220"}
+                strokeWidth={isSel ? 2.5 : 1} />
+              <text x={n.x} y={n.y + r + 11} textAnchor="middle"
+                fontSize="9.5" fontFamily="'IBM Plex Mono', monospace"
+                fill={dim ? "#4A5670" : "#C7D0DE"}>
+                {n.id.length > 16 ? n.id.slice(0, 15) + "…" : n.id}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  TREND BARS                                                          */
+/* ------------------------------------------------------------------ */
+
+function TrendBars({ items }) {
+  const counts = useMemo(() => {
+    const m = new Map();
+    items.forEach((n) => n.trends.forEach((t) => m.set(t, (m.get(t) || 0) + 1)));
+    return Array.from(m.entries()).sort((a, b) => b[1] - a[1]).slice(0, 7);
+  }, [items]);
+  const max = counts.length ? counts[0][1] : 1;
+
+  if (counts.length === 0) return <div className="empty-graph">Aucune tendance pour ce filtre.</div>;
+
+  return (
+    <div className="trend-list">
+      {counts.map(([name, count]) => (
+        <div key={name} className="trend-row">
+          <div className="trend-label">{name}</div>
+          <div className="trend-track">
+            <div className="trend-fill" style={{ width: `${(count / max) * 100}%` }} />
+          </div>
+          <div className="trend-count">{count}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  NEWS CARD                                                          */
+/* ------------------------------------------------------------------ */
+
+function NewsCard({ item, selectedCompany, onSelectCompany }) {
+  const cat = CATS[item.category] || CATS.innovation;
+  return (
+    <article className="card" style={{ borderLeftColor: cat.color }}>
+      <div className="card-meta">
+        {item.fresh && <span className="badge-new">nouveau</span>}
+        <span className="chip-country">{item.flag} {item.country}</span>
+        <span className="dot">•</span>
+        <span className="card-cat" style={{ color: cat.color }}>{cat.label}</span>
+        <span className="dot">•</span>
+        <span className="card-source">{item.source}</span>
+        <span className="card-date">{item.date}</span>
+      </div>
+      {item.url ? (
+        <a className="card-title-link" href={item.url} target="_blank" rel="noopener noreferrer">
+          {item.title} <span className="ext-icon">↗</span>
+        </a>
+      ) : (
+        <h3 className="card-title-link card-title-static">{item.title}</h3>
+      )}
+      <p className="card-summary">{item.summary}</p>
+      <div className="card-footer">
+        {item.companies.map((co) => (
+          <button key={co}
+            className={`chip-company ${selectedCompany === co ? "chip-company--active" : ""}`}
+            onClick={() => onSelectCompany(selectedCompany === co ? null : co)}>
+            {co}
+          </button>
+        ))}
+      </div>
+    </article>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  MAIN DASHBOARD                                                     */
+/* ------------------------------------------------------------------ */
+
+export default function Dashboard() {
+  const [items, setItems] = useState(SEED_NEWS);
+  const [country, setCountry] = useState("all");
+  const [category, setCategory] = useState("all");
+  const [company, setCompany] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
+
+  const countryCounts = useMemo(() => {
+    const m = new Map();
+    items.forEach((n) => {
+      const key = `${n.flag} ${n.country}`;
+      m.set(key, (m.get(key) || 0) + 1);
+    });
+    return Array.from(m.entries()).sort((a, b) => b[1] - a[1]);
+  }, [items]);
+
+  const filtered = useMemo(() => {
+    return items.filter((n) => {
+      if (country !== "all" && `${n.flag} ${n.country}` !== country) return false;
+      if (category !== "all" && n.category !== category) return false;
+      if (company && !n.companies.includes(company)) return false;
+      return true;
+    }).sort((a, b) => b.id - a.id);
+  }, [items, country, category, company]);
+
+  const categoryCounts = useMemo(() => {
+    const m = { all: items.length, innovation: 0, defense: 0, industrie: 0 };
+    items.forEach((n) => { m[n.category] = (m[n.category] || 0) + 1; });
+    return m;
+  }, [items]);
+
+  const resetAll = () => { setCountry("all"); setCategory("all"); setCompany(null); };
+
+  const handleRefresh = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const fresh = await fetchFreshNews();
+      if (fresh.length === 0) throw new Error("Aucun article exploitable dans la réponse.");
+      setItems((prev) => [...fresh, ...prev.map((p) => ({ ...p, fresh: false }))]);
+      setLastUpdated(new Date());
+    } catch (e) {
+      setError(e.message || "Actualisation impossible pour le moment.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="dash">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+        .dash {
+          --ink: #0B1220;
+          --panel: #121B2E;
+          --panel2: #16213A;
+          --border: #24314A;
+          --text: #EDEFF4;
+          --muted: #8B96AB;
+          --amber: #E8A33D;
+          background: var(--ink);
+          color: var(--text);
+          font-family: 'Inter', sans-serif;
+          min-height: 100vh;
+          padding: 18px 14px 40px;
+          box-sizing: border-box;
+        }
+        .dash * { box-sizing: border-box; }
+
+        .header { margin-bottom: 16px; display: flex; justify-content: space-between; gap: 14px; flex-wrap: wrap; align-items: flex-start; }
+        .header-text { flex: 1 1 320px; }
+        .eyebrow {
+          font-family: 'IBM Plex Mono', monospace;
+          font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+          color: var(--amber); margin-bottom: 6px;
+        }
+        .h1 {
+          font-family: 'Space Grotesk', sans-serif;
+          font-weight: 700; font-size: 26px; line-height: 1.15; margin: 0 0 6px;
+        }
+        .sub { color: var(--muted); font-size: 13px; max-width: 640px; line-height: 1.5; }
+
+        .refresh-box { flex: 0 0 auto; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+        .refresh-btn {
+          font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 13px;
+          padding: 9px 16px; border-radius: 10px; border: 1px solid var(--amber);
+          background: #2A2213; color: var(--amber); cursor: pointer; white-space: nowrap;
+          display: flex; align-items: center; gap: 7px;
+        }
+        .refresh-btn:disabled { opacity: 0.6; cursor: wait; }
+        .spin { display: inline-block; width: 12px; height: 12px; border-radius: 50%;
+          border: 2px solid rgba(232,163,61,0.3); border-top-color: var(--amber);
+          animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .last-updated { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--muted); }
+        .error-banner {
+          font-size: 11.5px; color: #E8A33D; background: #2A2213; border: 1px solid #4A3A1C;
+          padding: 6px 10px; border-radius: 8px; max-width: 240px; text-align: right;
+        }
+
+        .tabs { display: flex; gap: 6px; margin: 18px 0 10px; flex-wrap: wrap; }
+        .tab {
+          font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 700;
+          padding: 7px 13px; border-radius: 999px; border: 1px solid var(--border);
+          background: var(--panel); color: var(--muted); cursor: pointer;
+        }
+        .tab--active { color: var(--ink); border-color: transparent; }
+        .tab-count { opacity: 0.7; font-weight: 500; margin-left: 4px; font-size: 11px; }
+
+        .country-strip {
+          display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 14px;
+          scrollbar-width: thin;
+        }
+        .country-chip {
+          flex: 0 0 auto; font-family: 'IBM Plex Mono', monospace; font-size: 12px;
+          padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border);
+          background: var(--panel); color: var(--text); cursor: pointer; white-space: nowrap;
+        }
+        .country-chip--active { border-color: var(--amber); background: #2A2213; color: var(--amber); }
+
+        .layout { display: grid; grid-template-columns: 1fr; gap: 16px; }
+        @media (min-width: 880px) {
+          .layout { grid-template-columns: 1.25fr 1fr; align-items: start; }
+          .side { position: sticky; top: 14px; }
+        }
+
+        .panel {
+          background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
+          padding: 14px 14px 16px;
+        }
+        .panel + .panel { margin-top: 14px; }
+        .panel-title {
+          font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 14px;
+          margin: 0 0 3px; display: flex; align-items: center; justify-content: space-between;
+        }
+        .panel-hint { font-size: 11.5px; color: var(--muted); margin-bottom: 10px; }
+        .clear-link {
+          font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--amber);
+          background: none; border: none; cursor: pointer; padding: 0;
+        }
+
+        .empty-graph { color: var(--muted); font-size: 12.5px; padding: 30px 0; text-align: center; }
+        .graph-wrap { width: 100%; }
+
+        .trend-list { display: flex; flex-direction: column; gap: 8px; }
+        .trend-row { display: grid; grid-template-columns: 1fr 2fr 20px; align-items: center; gap: 8px; }
+        .trend-label { font-size: 11.5px; color: var(--text); }
+        .trend-track { height: 6px; background: #1C2740; border-radius: 4px; overflow: hidden; }
+        .trend-fill { height: 100%; background: linear-gradient(90deg, var(--amber), #C1553F); border-radius: 4px; }
+        .trend-count { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); text-align: right; }
+
+        .feed-count { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+        .feed { display: flex; flex-direction: column; gap: 12px; }
+
+        .card {
+          background: var(--panel); border: 1px solid var(--border); border-left: 3px solid;
+          border-radius: 10px; padding: 13px 14px;
+        }
+        .card-meta {
+          display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+          font-size: 11px; color: var(--muted); margin-bottom: 6px;
+        }
+        .badge-new {
+          font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; font-weight: 700;
+          text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink);
+          background: var(--amber); padding: 1px 6px; border-radius: 4px;
+        }
+        .chip-country { font-weight: 500; color: var(--text); }
+        .card-cat { font-weight: 700; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; }
+        .dot { opacity: 0.5; }
+        .card-source { font-style: italic; }
+        .card-date { margin-left: auto; font-family: 'IBM Plex Mono', monospace; }
+        .card-title-link {
+          font-family: 'Space Grotesk', sans-serif; font-size: 15.5px; font-weight: 700;
+          margin: 0 0 6px; line-height: 1.3; color: var(--text); text-decoration: none;
+          display: block;
+        }
+        a.card-title-link:hover { color: var(--amber); }
+        a.card-title-link:hover .ext-icon { opacity: 1; }
+        .card-title-static { cursor: default; }
+        .ext-icon { font-size: 12px; opacity: 0.5; }
+        .card-summary { font-size: 13px; line-height: 1.55; color: #C7D0DE; margin: 0 0 10px; }
+        .card-footer { display: flex; gap: 6px; flex-wrap: wrap; }
+        .chip-company {
+          font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; padding: 3px 8px;
+          border-radius: 6px; border: 1px solid var(--border); background: var(--panel2);
+          color: var(--muted); cursor: pointer;
+        }
+        .chip-company--active { border-color: var(--amber); color: var(--amber); background: #2A2213; }
+
+        .legend { display: flex; gap: 12px; font-size: 11px; color: var(--muted); margin-top: 10px; flex-wrap: wrap; }
+        .legend-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
+
+        .footnote { margin-top: 22px; font-size: 11px; color: var(--muted); line-height: 1.6; border-top: 1px solid var(--border); padding-top: 12px; }
+      `}</style>
+
+      <header className="header">
+        <div className="header-text">
+          <div className="eyebrow">Veille mondiale · Tech · Défense · Industrie</div>
+          <h1 className="h1">Radar Tech Mondial</h1>
+          <p className="sub">
+            Panorama par pays des dernières actualités technologiques, industrielles et de défense —
+            sources croisées et en expansion continue. Touchez un pays, une catégorie ou un acteur pour filtrer ;
+            touchez un titre pour lire l'article source.
+          </p>
+        </div>
+        <div className="refresh-box">
+          <button className="refresh-btn" onClick={handleRefresh} disabled={loading}>
+            {loading ? <span className="spin" /> : "🔄"} {loading ? "Recherche en cours…" : "Actualiser"}
+          </button>
+          {lastUpdated && (
+            <span className="last-updated">Actualisé à {lastUpdated.toLocaleTimeString("fr-FR")}</span>
+          )}
+          {error && <div className="error-banner">{error}</div>}
+        </div>
+      </header>
+
+      <div className="tabs">
+        {["all", "innovation", "defense", "industrie"].map((k) => (
+          <button key={k}
+            className={`tab ${category === k ? "tab--active" : ""}`}
+            style={category === k ? { background: k === "all" ? "#E8A33D" : CATS[k].color } : {}}
+            onClick={() => setCategory(k)}>
+            {k === "all" ? "Tous" : CATS[k].label}
+            <span className="tab-count">{categoryCounts[k] || 0}</span>
+          </button>
+        ))}
+      </div>
+
+      <div className="country-strip">
+        <button className={`country-chip ${country === "all" ? "country-chip--active" : ""}`} onClick={() => setCountry("all")}>
+          🌐 Tous ({items.length})
+        </button>
+        {countryCounts.map(([key, count]) => (
+          <button key={key}
+            className={`country-chip ${country === key ? "country-chip--active" : ""}`}
+            onClick={() => setCountry(key)}>
+            {key} ({count})
+          </button>
+        ))}
+      </div>
+
+      <div className="layout">
+        <div className="feed-col">
+          <div className="feed-count">
+            {filtered.length} article{filtered.length > 1 ? "s" : ""}
+            {company ? <> · acteur : <strong style={{ color: "#E8A33D" }}> {company}</strong></> : null}
+            {(country !== "all" || category !== "all" || company) && (
+              <button className="clear-link" style={{ marginLeft: 10 }} onClick={resetAll}>réinitialiser</button>
+            )}
+          </div>
+          <div className="feed">
+            {filtered.map((item) => (
+              <NewsCard key={item.id} item={item} selectedCompany={company} onSelectCompany={setCompany} />
+            ))}
+            {filtered.length === 0 && <div className="empty-graph">Aucun article ne correspond à ces filtres.</div>}
+          </div>
+        </div>
+
+        <div className="side">
+          <div className="panel">
+            <div className="panel-title">
+              Réseau d'acteurs
+              {company && <button className="clear-link" onClick={() => setCompany(null)}>effacer</button>}
+            </div>
+            <div className="panel-hint">Liens = co-apparition dans une même actualité. Touchez un nœud pour filtrer.</div>
+            <NetworkGraph items={filtered.length ? filtered : items} selectedCompany={company} onSelectCompany={setCompany} />
+            <div className="legend">
+              <span><span className="legend-dot" style={{ background: CATS.defense.color }} />Défense</span>
+              <span><span className="legend-dot" style={{ background: CATS.innovation.color }} />Tech / IA</span>
+              <span><span className="legend-dot" style={{ background: CATS.industrie.color }} />Industrie</span>
+            </div>
+          </div>
+
+          <div className="panel">
+            <div className="panel-title">Tendances du moment</div>
+            <div className="panel-hint">Fréquence des thèmes dans la sélection filtrée.</div>
+            <TrendBars items={filtered} />
+          </div>
+        </div>
+      </div>
+
+      <div className="footnote">
+        Instantané de départ compilé le 4 juillet 2026 à partir de plusieurs médias spécialisés (chaque titre renvoie
+        vers sa source réelle). Les pays présents ici sont un échantillon de démonstration, pas un classement — toute
+        BITD ou écosystème d'innovation national peut être ajouté. Le bouton « Actualiser »
+        interroge le web en direct pour ramener de nouveaux articles, de n'importe quel pays, et les visualisations
+        (réseau d'acteurs, tendances, filtres pays) se recalculent automatiquement à partir du contenu du moment.
+      </div>
+    </div>
+  );
+}
