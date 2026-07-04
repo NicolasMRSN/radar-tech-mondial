@@ -5,16 +5,28 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Radar Tech Mondial — Veille Tech / Défense / Industrie</title>
 <meta name="description" content="Panorama mondial par pays des actualités technologiques, industrielles et de défense, avec réseau d'acteurs et tendances." />
+<style>html,body{margin:0;background:#0B1220;color:#EDEFF4;font-family:sans-serif;}</style>
+<script>
+  window.addEventListener('error', function (e) {
+    var el = document.getElementById('root');
+    if (el && el.children.length === 0) {
+      el.innerHTML = '<pre style="color:#EDEFF4;background:#0B1220;padding:24px;white-space:pre-wrap;font-family:monospace;font-size:13px;">Erreur de chargement du tableau de bord.\n\n' +
+        (e.message || e) + '\n\nSource: ' + (e.filename || 'inline') + (e.lineno ? (':' + e.lineno) : '') + '</pre>';
+    }
+  });
+</script>
 <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-<style>html,body{margin:0;background:#0B1220;}</style>
 </head>
 <body>
-<div id="root"></div>
-<script type="text/babel" data-presets="react" data-type="module">
-const { useState, useMemo, useRef, useEffect } = React;
+<div id="root">
+  <pre style="color:#8B96AB;background:#0B1220;padding:24px;white-space:pre-wrap;font-family:monospace;font-size:13px;">Chargement du tableau de bord…</pre>
+</div>
+<script type="text/babel" data-presets="react">
+try {
+  const { useState, useMemo, useRef, useEffect } = React;
 
 
 /* ------------------------------------------------------------------ */
@@ -906,8 +918,14 @@ function Dashboard() {
 }
 
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(<Dashboard />);
+  const root = ReactDOM.createRoot(document.getElementById('root'));
+  root.render(<Dashboard />);
+} catch (err) {
+  console.error(err);
+  document.getElementById('root').innerHTML =
+    '<pre style="color:#EDEFF4;background:#0B1220;padding:24px;white-space:pre-wrap;font-family:monospace;font-size:13px;">Erreur au rendu du tableau de bord.\n\n' +
+    (err && err.message ? err.message : String(err)) + '</pre>';
+}
 </script>
 </body>
 </html>
