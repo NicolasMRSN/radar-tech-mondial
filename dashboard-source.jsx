@@ -830,6 +830,7 @@ function NewsCard({ item, selectedCompany, onSelectCompany }) {
 
 export default function Dashboard() {
   const [items, setItems] = useState(SEED_NEWS);
+  const [activeView, setActiveView] = useState("articles"); // "articles" | "graphiques"
   const [country, setCountry] = useState("all");
   const [category, setCategory] = useState("all");
   const [company, setCompany] = useState(null);
@@ -958,11 +959,22 @@ export default function Dashboard() {
         }
         .country-chip--active { border-color: var(--amber); background: #2A2213; color: var(--amber); }
 
-        .layout { display: grid; grid-template-columns: 1fr; gap: 16px; }
-        @media (min-width: 880px) {
-          .layout { grid-template-columns: 1.25fr 1fr; align-items: start; }
-          .side { position: sticky; top: 14px; }
+        .view-switch {
+          display: flex; align-items: center; gap: 8px; margin: 4px 0 16px; flex-wrap: wrap;
+          border-bottom: 1px solid var(--border); padding-bottom: 10px;
         }
+        .view-tab {
+          font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 14px;
+          padding: 8px 16px; border-radius: 10px 10px 0 0; border: 1px solid transparent;
+          background: none; color: var(--muted); cursor: pointer;
+        }
+        .view-tab--active {
+          color: var(--amber); border: 1px solid var(--border); border-bottom-color: var(--ink);
+          background: var(--panel);
+        }
+
+        .feed-col--full { max-width: 720px; margin: 0 auto; }
+        .graphs-view .overview-grid + .overview-grid { margin-top: 0; }
 
         .panel {
           background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
@@ -990,7 +1002,7 @@ export default function Dashboard() {
         .trend-count { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); text-align: right; }
 
         .feed-count { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--muted); margin-bottom: 10px; }
-        .feed { display: flex; flex-direction: column; gap: 12px; }
+        .feed { display: flex; flex-direction: column; gap: 14px; }
 
         .card {
           background: var(--panel); border: 1px solid var(--border); border-left: 3px solid;
@@ -1086,38 +1098,6 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <div className="kpi-strip">
-        <div className="kpi-card">
-          <div className="kpi-value">{filtered.length}</div>
-          <div className="kpi-label">Articles (sélection)</div>
-        </div>
-        <div className="kpi-card">
-          <div className="kpi-value">{new Set(filtered.map((n) => n.country)).size}</div>
-          <div className="kpi-label">Pays couverts</div>
-        </div>
-        <div className="kpi-card">
-          <div className="kpi-value">{new Set(filtered.flatMap((n) => n.companies)).size}</div>
-          <div className="kpi-label">Acteurs cités</div>
-        </div>
-        <div className="kpi-card">
-          <div className="kpi-value" style={{ fontSize: 13.5 }}>{topTrendName || "—"}</div>
-          <div className="kpi-label">Tendance dominante</div>
-        </div>
-      </div>
-
-      <div className="overview-grid">
-        <div className="panel">
-          <div className="panel-title">Où ça se passe</div>
-          <div className="panel-hint">Taille = nombre d'articles, couleur = catégorie dominante. Touchez une bulle pour filtrer.</div>
-          <WorldMap items={filtered} selectedCountryKey={country === "all" ? null : country} onSelectCountry={setCountry} />
-        </div>
-        <div className="panel">
-          <div className="panel-title">Quand ça se passe</div>
-          <div className="panel-hint">Chaque point = un article ; les barres montrent le volume par semaine. Touchez un point pour l'ouvrir.</div>
-          <Timeline items={filtered} />
-        </div>
-      </div>
-
       <div className="tabs">
         {["all", "innovation", "defense", "industrie"].map((k) => (
           <button key={k}
@@ -1143,14 +1123,23 @@ export default function Dashboard() {
         ))}
       </div>
 
-      <div className="layout">
-        <div className="feed-col">
+      <div className="view-switch">
+        <button className={`view-tab ${activeView === "articles" ? "view-tab--active" : ""}`} onClick={() => setActiveView("articles")}>
+          📰 Articles <span className="tab-count">{filtered.length}</span>
+        </button>
+        <button className={`view-tab ${activeView === "graphiques" ? "view-tab--active" : ""}`} onClick={() => setActiveView("graphiques")}>
+          📊 Graphiques
+        </button>
+        {(country !== "all" || category !== "all" || company) && (
+          <button className="clear-link" style={{ marginLeft: "auto" }} onClick={resetAll}>réinitialiser les filtres</button>
+        )}
+      </div>
+
+      {activeView === "articles" && (
+        <div className="feed-col feed-col--full">
           <div className="feed-count">
             {filtered.length} article{filtered.length > 1 ? "s" : ""}
             {company ? <> · acteur : <strong style={{ color: "#E8A33D" }}> {company}</strong></> : null}
-            {(country !== "all" || category !== "all" || company) && (
-              <button className="clear-link" style={{ marginLeft: 10 }} onClick={resetAll}>réinitialiser</button>
-            )}
           </div>
           <div className="feed">
             {filtered.map((item) => (
@@ -1159,29 +1148,65 @@ export default function Dashboard() {
             {filtered.length === 0 && <div className="empty-graph">Aucun article ne correspond à ces filtres.</div>}
           </div>
         </div>
+      )}
 
-        <div className="side">
-          <div className="panel">
-            <div className="panel-title">
-              Réseau d'acteurs
-              {company && <button className="clear-link" onClick={() => setCompany(null)}>effacer</button>}
+      {activeView === "graphiques" && (
+        <div className="graphs-view">
+          <div className="kpi-strip">
+            <div className="kpi-card">
+              <div className="kpi-value">{filtered.length}</div>
+              <div className="kpi-label">Articles (sélection)</div>
             </div>
-            <div className="panel-hint">Liens = co-apparition dans une même actualité. Touchez un nœud pour filtrer.</div>
-            <NetworkGraph items={filtered.length ? filtered : items} selectedCompany={company} onSelectCompany={setCompany} />
-            <div className="legend">
-              <span><span className="legend-dot" style={{ background: CATS.defense.color }} />Défense</span>
-              <span><span className="legend-dot" style={{ background: CATS.innovation.color }} />Tech / IA</span>
-              <span><span className="legend-dot" style={{ background: CATS.industrie.color }} />Industrie</span>
+            <div className="kpi-card">
+              <div className="kpi-value">{new Set(filtered.map((n) => n.country)).size}</div>
+              <div className="kpi-label">Pays couverts</div>
+            </div>
+            <div className="kpi-card">
+              <div className="kpi-value">{new Set(filtered.flatMap((n) => n.companies)).size}</div>
+              <div className="kpi-label">Acteurs cités</div>
+            </div>
+            <div className="kpi-card">
+              <div className="kpi-value" style={{ fontSize: 13.5 }}>{topTrendName || "—"}</div>
+              <div className="kpi-label">Tendance dominante</div>
             </div>
           </div>
 
-          <div className="panel">
-            <div className="panel-title">Tendances du moment</div>
-            <div className="panel-hint">Fréquence des thèmes dans la sélection filtrée.</div>
-            <TrendBars items={filtered} />
+          <div className="overview-grid">
+            <div className="panel">
+              <div className="panel-title">Où ça se passe</div>
+              <div className="panel-hint">Taille = nombre d'articles, couleur = catégorie dominante. Touchez une bulle pour filtrer.</div>
+              <WorldMap items={filtered} selectedCountryKey={country === "all" ? null : country} onSelectCountry={setCountry} />
+            </div>
+            <div className="panel">
+              <div className="panel-title">Quand ça se passe</div>
+              <div className="panel-hint">Chaque point = un article ; les barres montrent le volume par semaine. Touchez un point pour l'ouvrir.</div>
+              <Timeline items={filtered} />
+            </div>
+          </div>
+
+          <div className="overview-grid">
+            <div className="panel">
+              <div className="panel-title">
+                Réseau d'acteurs
+                {company && <button className="clear-link" onClick={() => setCompany(null)}>effacer</button>}
+              </div>
+              <div className="panel-hint">Liens = co-apparition dans une même actualité. Touchez un nœud pour filtrer.</div>
+              <NetworkGraph items={filtered.length ? filtered : items} selectedCompany={company} onSelectCompany={setCompany} />
+              <div className="legend">
+                <span><span className="legend-dot" style={{ background: CATS.defense.color }} />Défense</span>
+                <span><span className="legend-dot" style={{ background: CATS.innovation.color }} />Tech / IA</span>
+                <span><span className="legend-dot" style={{ background: CATS.industrie.color }} />Industrie</span>
+              </div>
+            </div>
+
+            <div className="panel">
+              <div className="panel-title">Tendances du moment</div>
+              <div className="panel-hint">Fréquence des thèmes dans la sélection filtrée.</div>
+              <TrendBars items={filtered} />
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       <div className="footnote">
         Instantané de départ compilé le 4 juillet 2026 à partir de plusieurs médias spécialisés (chaque titre renvoie
