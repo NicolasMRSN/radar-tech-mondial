@@ -490,7 +490,7 @@ function useNetworkLayout(items, width, height) {
   }, [items, width, height]);
 }
 
-function NetworkGraph({ items, selectedCompany, onSelectCompany }) {
+function NetworkGraph({ items, selectedCompany, onSelectCompany, expanded = false }) {
   const wrapRef = useRef(null);
   const [dims, setDims] = useState({ w: 320, h: 300 });
 
@@ -499,11 +499,14 @@ function NetworkGraph({ items, selectedCompany, onSelectCompany }) {
     if (!el) return;
     const ro = new ResizeObserver((entries) => {
       const w = entries[0].contentRect.width;
-      setDims({ w: Math.max(260, w), h: Math.max(260, Math.min(360, w * 0.72)) });
+      const h = expanded
+        ? Math.max(420, Math.min(720, w * 0.75))
+        : Math.max(260, Math.min(360, w * 0.72));
+      setDims({ w: Math.max(260, w), h });
     });
     ro.observe(el);
     return () => ro.disconnect();
-  }, []);
+  }, [expanded]);
 
   const { nodes, links } = useNetworkLayout(items, dims.w, dims.h);
   const nodeById = useMemo(() => new Map(nodes.map((n) => [n.id, n])), [nodes]);
@@ -550,9 +553,10 @@ function NetworkGraph({ items, selectedCompany, onSelectCompany }) {
           );
         })}
         {nodes.map((n) => {
-          const r = 6 + n.count * 2.6;
+          const r = (expanded ? 8 : 6) + n.count * (expanded ? 3.4 : 2.6);
           const dim = connected && !connected.has(n.id);
           const isSel = n.id === selectedCompany;
+          const maxLen = expanded ? 26 : 16;
           return (
             <g key={n.id}
               onClick={() => onSelectCompany(isSel ? null : n.id)}
@@ -562,10 +566,10 @@ function NetworkGraph({ items, selectedCompany, onSelectCompany }) {
                 fillOpacity={dim ? 0.25 : 0.9}
                 stroke={isSel ? "#E8A33D" : "#0B1220"}
                 strokeWidth={isSel ? 2.5 : 1} />
-              <text x={n.x} y={n.y + r + 11} textAnchor="middle"
-                fontSize="9.5" fontFamily="'IBM Plex Mono', monospace"
+              <text x={n.x} y={n.y + r + (expanded ? 13 : 11)} textAnchor="middle"
+                fontSize={expanded ? "12" : "9.5"} fontFamily="'IBM Plex Mono', monospace"
                 fill={dim ? "#4A5670" : "#C7D0DE"}>
-                {n.id.length > 16 ? n.id.slice(0, 15) + "…" : n.id}
+                {n.id.length > maxLen ? n.id.slice(0, maxLen - 1) + "…" : n.id}
               </text>
             </g>
           );
@@ -587,7 +591,7 @@ function NetworkGraph({ items, selectedCompany, onSelectCompany }) {
 /*  artifact preview and the exported static site, with zero network.    */
 /* ------------------------------------------------------------------ */
 
-function WorldMap({ items, selectedCountryKey, onSelectCountry }) {
+function WorldMap({ items, selectedCountryKey, onSelectCountry, expanded = false }) {
   const wrapRef = useRef(null);
   const [dims, setDims] = useState({ w: 320, h: 200 });
 
@@ -596,11 +600,14 @@ function WorldMap({ items, selectedCountryKey, onSelectCountry }) {
     if (!el) return;
     const ro = new ResizeObserver((entries) => {
       const w = entries[0].contentRect.width;
-      setDims({ w: Math.max(260, w), h: Math.max(160, Math.min(260, w * 0.5)) });
+      const h = expanded
+        ? Math.max(360, Math.min(620, w * 0.55))
+        : Math.max(160, Math.min(260, w * 0.5));
+      setDims({ w: Math.max(260, w), h });
     });
     ro.observe(el);
     return () => ro.disconnect();
-  }, []);
+  }, [expanded]);
 
   const { projection, graticulePath, bubbles } = useMemo(() => {
     const projection = d3.geoNaturalEarth1()
@@ -641,7 +648,7 @@ function WorldMap({ items, selectedCountryKey, onSelectCountry }) {
       <svg width="100%" height={dims.h} viewBox={`0 0 ${dims.w} ${dims.h}`}>
         <path d={graticulePath} fill="none" stroke="#1C2740" strokeWidth="1" />
         {bubbles.map((b) => {
-          const r = 5 + (b.count / maxCount) * 16;
+          const r = (expanded ? 7 : 5) + (b.count / maxCount) * (expanded ? 24 : 16);
           const isSel = selectedCountryKey === b.key;
           const dim = selectedCountryKey && !isSel;
           return (
@@ -649,9 +656,9 @@ function WorldMap({ items, selectedCountryKey, onSelectCountry }) {
               <circle cx={b.x} cy={b.y} r={r} fill={CATS[b.sector].color}
                 fillOpacity={dim ? 0.25 : 0.75} stroke={isSel ? "#E8A33D" : "#0B1220"}
                 strokeWidth={isSel ? 2 : 1} />
-              <text x={b.x} y={b.y - r - 3} textAnchor="middle" fontSize="9"
+              <text x={b.x} y={b.y - r - 3} textAnchor="middle" fontSize={expanded ? "12" : "9"}
                 fontFamily="'IBM Plex Mono', monospace" fill={dim ? "#4A5670" : "#C7D0DE"}>
-                {b.flag} {b.count}
+                {expanded ? `${b.flag} ${b.country} (${b.count})` : `${b.flag} ${b.count}`}
               </text>
             </g>
           );
@@ -689,10 +696,10 @@ function WorldMap({ items, selectedCountryKey, onSelectCountry }) {
 /*  pattern: overview of recency/bursts before any per-article detail.   */
 /* ------------------------------------------------------------------ */
 
-function Timeline({ items }) {
+function Timeline({ items, expanded = false }) {
   const wrapRef = useRef(null);
   const [width, setWidth] = useState(320);
-  const height = 108;
+  const height = expanded ? 260 : 108;
 
   useEffect(() => {
     const el = wrapRef.current;
@@ -737,25 +744,27 @@ function Timeline({ items }) {
   const ticks = xScale.ticks(width < 400 ? 3 : 5);
   const fmtDate = (d) => d.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
   const peakBucket = buckets.reduce((max, b) => (b.count > max ? b.count : max), 0);
+  const barMax = expanded ? 100 : 28;
+  const baseline = height - (expanded ? 40 : 34);
 
   return (
     <div ref={wrapRef} className="timeline-wrap">
       <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`}>
         {buckets.map((b, i) => (
-          <rect key={i} x={Math.min(b.x0, b.x1)} y={height - 34 - (b.count / maxBucket) * 28}
-            width={Math.max(1, Math.abs(b.x1 - b.x0) - 2)} height={(b.count / maxBucket) * 28}
+          <rect key={i} x={Math.min(b.x0, b.x1)} y={baseline - (b.count / maxBucket) * barMax}
+            width={Math.max(1, Math.abs(b.x1 - b.x0) - 2)} height={(b.count / maxBucket) * barMax}
             fill="#1C2740" />
         ))}
-        <line x1="0" y1={height - 34} x2={width} y2={height - 34} stroke="#24314A" strokeWidth="1" />
+        <line x1="0" y1={baseline} x2={width} y2={baseline} stroke="#24314A" strokeWidth="1" />
         {ticks.map((t, i) => (
           <g key={i}>
-            <line x1={xScale(t)} y1={height - 34} x2={xScale(t)} y2={height - 30} stroke="#4A5670" strokeWidth="1" />
-            <text x={xScale(t)} y={height - 18} textAnchor="middle" fontSize="8.5"
+            <line x1={xScale(t)} y1={baseline} x2={xScale(t)} y2={baseline + 4} stroke="#4A5670" strokeWidth="1" />
+            <text x={xScale(t)} y={baseline + 16} textAnchor="middle" fontSize={expanded ? "11" : "8.5"}
               fontFamily="'IBM Plex Mono', monospace" fill="#8B96AB">{fmtDate(t)}</text>
           </g>
         ))}
         {dated.map((d) => (
-          <circle key={d.id} cx={xScale(d._date)} cy={height - 34 - 8} r="4"
+          <circle key={d.id} cx={xScale(d._date)} cy={baseline - 8} r={expanded ? 5.5 : 4}
             fill={CATS[d.category].color} fillOpacity="0.9" stroke="#0B1220" strokeWidth="0.5"
             style={{ cursor: d.url ? "pointer" : "default" }}
             onClick={() => d.url && window.open(d.url, "_blank", "noopener,noreferrer")}>
@@ -771,17 +780,35 @@ function Timeline({ items }) {
           <span><span className="legend-dot" style={{ background: CATS.industrie.color }} />Industrie</span>
         </div>
       </div>
+      {expanded && (
+        <div className="timeline-detail-list">
+          {[...dated].sort((a, b) => b._date - a._date).map((d) => (
+            <div key={d.id} className="timeline-detail-row">
+              <span className="legend-dot" style={{ background: CATS[d.category].color, flexShrink: 0 }} />
+              <span className="timeline-detail-date">{d.date}</span>
+              <span className="timeline-detail-country">{d.flag} {d.country}</span>
+              {d.url ? (
+                <a href={d.url} target="_blank" rel="noopener noreferrer" className="timeline-detail-title">
+                  {d.title} <span className="ext-icon">↗</span>
+                </a>
+              ) : (
+                <span className="timeline-detail-title">{d.title}</span>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
 
-function TrendBars({ items }) {
+function TrendBars({ items, expanded = false }) {
   const counts = useMemo(() => {
     const m = new Map();
     items.forEach((n) => n.trends.forEach((t) => m.set(t, (m.get(t) || 0) + 1)));
-    return Array.from(m.entries()).sort((a, b) => b[1] - a[1]).slice(0, 7);
-  }, [items]);
+    return Array.from(m.entries()).sort((a, b) => b[1] - a[1]).slice(0, expanded ? 100 : 7);
+  }, [items, expanded]);
   const max = counts.length ? counts[0][1] : 1;
 
   if (counts.length === 0) return <div className="empty-graph">Aucune tendance pour ce filtre.</div>;
@@ -860,6 +887,34 @@ function generateInsightText(items) {
 
 
 /* ------------------------------------------------------------------ */
+/*  CHART MODAL — full-size zoom view for any panel, with backdrop      */
+/*  click and Escape-to-close.                                          */
+/* ------------------------------------------------------------------ */
+
+function ChartModal({ title, hint, onClose, children }) {
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-panel" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <div>
+            <div className="modal-title">{title}</div>
+            {hint && <div className="panel-hint" style={{ marginBottom: 0 }}>{hint}</div>}
+          </div>
+          <button className="modal-close" onClick={onClose} aria-label="Fermer">✕</button>
+        </div>
+        <div className="modal-body">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  NEWS CARD                                                          */
 /* ------------------------------------------------------------------ */
 
@@ -904,6 +959,7 @@ function NewsCard({ item, selectedCompany, onSelectCompany }) {
 export default function Dashboard() {
   const [items, setItems] = useState(SEED_NEWS);
   const [activeView, setActiveView] = useState("articles"); // "articles" | "graphiques"
+  const [expandedChart, setExpandedChart] = useState(null); // null | "map" | "timeline" | "network" | "trends"
   const [country, setCountry] = useState("all");
   const [category, setCategory] = useState("all");
   const [company, setCompany] = useState(null);
@@ -980,6 +1036,13 @@ export default function Dashboard() {
           box-sizing: border-box;
         }
         .dash * { box-sizing: border-box; }
+        @media (min-width: 900px) {
+          .dash { padding: 28px 40px 56px; }
+        }
+        @media (min-width: 1300px) {
+          .dash { padding: 32px 64px 64px; }
+          .dash-inner { max-width: 1500px; margin: 0 auto; }
+        }
 
         .header { margin-bottom: 16px; display: flex; justify-content: space-between; gap: 14px; flex-wrap: wrap; align-items: flex-start; }
         .header-text { flex: 1 1 320px; }
@@ -993,6 +1056,11 @@ export default function Dashboard() {
           font-weight: 700; font-size: 26px; line-height: 1.15; margin: 0 0 6px;
         }
         .sub { color: var(--muted); font-size: 13px; max-width: 640px; line-height: 1.5; }
+        @media (min-width: 900px) {
+          .h1 { font-size: 34px; }
+          .sub { font-size: 14px; max-width: 760px; }
+          .eyebrow { font-size: 12px; }
+        }
 
         .refresh-box { flex: 0 0 auto; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
         .refresh-btn {
@@ -1025,6 +1093,10 @@ export default function Dashboard() {
           display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 14px;
           scrollbar-width: thin;
         }
+        @media (min-width: 900px) {
+          .country-strip { flex-wrap: wrap; overflow-x: visible; padding-bottom: 4px; }
+          .country-chip { font-size: 12.5px; padding: 7px 14px; }
+        }
         .country-chip {
           flex: 0 0 auto; font-family: 'IBM Plex Mono', monospace; font-size: 12px;
           padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border);
@@ -1050,6 +1122,9 @@ export default function Dashboard() {
         }
 
         .feed-col--full { max-width: 720px; margin: 0 auto; }
+        @media (min-width: 900px) {
+          .feed-col--full { max-width: none; margin: 0; }
+        }
         .graphs-view .overview-grid + .overview-grid { margin-top: 0; }
 
         .panel {
@@ -1066,6 +1141,45 @@ export default function Dashboard() {
           font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--amber);
           background: none; border: none; cursor: pointer; padding: 0;
         }
+        .expand-btn {
+          font-size: 14px; line-height: 1; background: none; border: 1px solid var(--border);
+          color: var(--muted); border-radius: 6px; padding: 3px 7px; cursor: pointer;
+        }
+        .expand-btn:hover { color: var(--amber); border-color: var(--amber); }
+
+        .modal-backdrop {
+          position: fixed; inset: 0; background: rgba(4,7,14,0.82); z-index: 1000;
+          display: flex; align-items: center; justify-content: center; padding: 20px;
+        }
+        .modal-panel {
+          background: var(--panel); border: 1px solid var(--border); border-radius: 16px;
+          width: 100%; max-width: 1100px; max-height: 90vh; overflow-y: auto;
+          padding: 18px 20px 22px; box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+        .modal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; gap: 12px; }
+        .modal-title { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 18px; }
+        .modal-close {
+          font-size: 14px; background: var(--panel2); border: 1px solid var(--border); color: var(--text);
+          border-radius: 8px; width: 30px; height: 30px; cursor: pointer; flex-shrink: 0;
+        }
+        .modal-close:hover { border-color: var(--amber); color: var(--amber); }
+        .modal-body { width: 100%; }
+
+        .timeline-detail-list {
+          margin-top: 14px; border-top: 1px solid var(--border); padding-top: 10px;
+          display: flex; flex-direction: column; gap: 7px; max-height: 340px; overflow-y: auto;
+        }
+        .timeline-detail-row {
+          display: grid; grid-template-columns: 8px 90px 140px 1fr; align-items: center; gap: 10px;
+          font-size: 12px;
+        }
+        .timeline-detail-date { font-family: 'IBM Plex Mono', monospace; color: var(--muted); font-size: 11px; }
+        .timeline-detail-country { color: var(--muted); font-size: 11.5px; }
+        .timeline-detail-title { color: var(--text); text-decoration: none; }
+        a.timeline-detail-title:hover { color: var(--amber); }
+        @media (max-width: 640px) {
+          .timeline-detail-row { grid-template-columns: 8px 1fr; grid-template-areas: "dot date" "dot country" "dot title"; row-gap: 2px; }
+        }
 
         .empty-graph { color: var(--muted); font-size: 12.5px; padding: 30px 0; text-align: center; }
         .graph-wrap { width: 100%; }
@@ -1079,6 +1193,12 @@ export default function Dashboard() {
 
         .feed-count { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--muted); margin-bottom: 10px; }
         .feed { display: flex; flex-direction: column; gap: 14px; }
+        @media (min-width: 900px) {
+          .feed { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; align-items: start; }
+        }
+        @media (min-width: 1300px) {
+          .feed { grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); }
+        }
 
         .card {
           background: var(--panel); border: 1px solid var(--border); border-left: 3px solid;
@@ -1153,6 +1273,7 @@ export default function Dashboard() {
         .footnote { margin-top: 22px; font-size: 11px; color: var(--muted); line-height: 1.6; border-top: 1px solid var(--border); padding-top: 12px; }
       `}</style>
 
+      <div className="dash-inner">
       <header className="header">
         <div className="header-text">
           <div className="eyebrow">Veille mondiale · Tech · Défense · Industrie</div>
@@ -1255,12 +1376,18 @@ export default function Dashboard() {
 
           <div className="overview-grid">
             <div className="panel">
-              <div className="panel-title">Où ça se passe</div>
+              <div className="panel-title">
+                Où ça se passe
+                <button className="expand-btn" onClick={() => setExpandedChart("map")} title="Agrandir">⛶</button>
+              </div>
               <div className="panel-hint">Taille = nombre d'articles, couleur = catégorie dominante. Touchez une bulle pour filtrer.</div>
               <WorldMap items={filtered} selectedCountryKey={country === "all" ? null : country} onSelectCountry={setCountry} />
             </div>
             <div className="panel">
-              <div className="panel-title">Quand ça se passe</div>
+              <div className="panel-title">
+                Quand ça se passe
+                <button className="expand-btn" onClick={() => setExpandedChart("timeline")} title="Agrandir">⛶</button>
+              </div>
               <div className="panel-hint">Chaque point = un article ; les barres montrent le volume par semaine. Touchez un point pour l'ouvrir.</div>
               <Timeline items={filtered} />
             </div>
@@ -1270,7 +1397,10 @@ export default function Dashboard() {
             <div className="panel">
               <div className="panel-title">
                 Réseau d'acteurs
-                {company && <button className="clear-link" onClick={() => setCompany(null)}>effacer</button>}
+                <span style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                  {company && <button className="clear-link" onClick={() => setCompany(null)}>effacer</button>}
+                  <button className="expand-btn" onClick={() => setExpandedChart("network")} title="Agrandir">⛶</button>
+                </span>
               </div>
               <div className="panel-hint">Liens = co-apparition dans une même actualité. Touchez un nœud pour filtrer.</div>
               <NetworkGraph items={filtered.length ? filtered : items} selectedCompany={company} onSelectCompany={setCompany} />
@@ -1282,12 +1412,41 @@ export default function Dashboard() {
             </div>
 
             <div className="panel">
-              <div className="panel-title">Tendances du moment</div>
+              <div className="panel-title">
+                Tendances du moment
+                <button className="expand-btn" onClick={() => setExpandedChart("trends")} title="Agrandir">⛶</button>
+              </div>
               <div className="panel-hint">Fréquence des thèmes dans la sélection filtrée.</div>
               <TrendBars items={filtered} />
             </div>
           </div>
         </div>
+      )}
+
+      {expandedChart === "map" && (
+        <ChartModal title="Où ça se passe" hint="Taille = nombre d'articles, couleur = catégorie dominante. Touchez une bulle pour filtrer." onClose={() => setExpandedChart(null)}>
+          <WorldMap items={filtered} selectedCountryKey={country === "all" ? null : country} onSelectCountry={setCountry} expanded />
+        </ChartModal>
+      )}
+      {expandedChart === "timeline" && (
+        <ChartModal title="Quand ça se passe" hint="Chaque point = un article ; la liste ci-dessous détaille tout ce qui est daté dans la sélection." onClose={() => setExpandedChart(null)}>
+          <Timeline items={filtered} expanded />
+        </ChartModal>
+      )}
+      {expandedChart === "network" && (
+        <ChartModal title="Réseau d'acteurs" hint="Liens = co-apparition dans une même actualité. Touchez un nœud pour filtrer." onClose={() => setExpandedChart(null)}>
+          <NetworkGraph items={filtered.length ? filtered : items} selectedCompany={company} onSelectCompany={setCompany} expanded />
+          <div className="legend" style={{ marginTop: 12 }}>
+            <span><span className="legend-dot" style={{ background: CATS.defense.color }} />Défense</span>
+            <span><span className="legend-dot" style={{ background: CATS.innovation.color }} />Tech / IA</span>
+            <span><span className="legend-dot" style={{ background: CATS.industrie.color }} />Industrie</span>
+          </div>
+        </ChartModal>
+      )}
+      {expandedChart === "trends" && (
+        <ChartModal title="Tendances du moment" hint="Toutes les tendances de la sélection filtrée, pas seulement le top 7." onClose={() => setExpandedChart(null)}>
+          <TrendBars items={filtered} expanded />
+        </ChartModal>
       )}
 
       <div className="footnote">
@@ -1296,6 +1455,7 @@ export default function Dashboard() {
         BITD ou écosystème d'innovation national peut être ajouté. Le bouton « Actualiser »
         interroge le web en direct pour ramener de nouveaux articles, de n'importe quel pays, et les visualisations
         (réseau d'acteurs, tendances, filtres pays) se recalculent automatiquement à partir du contenu du moment.
+      </div>
       </div>
     </div>
   );
