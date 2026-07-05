@@ -334,19 +334,58 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
     /* ------------------------------------------------------------------ */
 
     const CATS = {
-      innovation: {
-        label: "Innovation",
-        color: "#3FA9A0"
+      materiaux: {
+        label: "Matériaux & structures",
+        icon: "🧱",
+        color: "#5EC8B8"
       },
-      defense: {
-        label: "Défense",
+      fabrication: {
+        label: "Fabrication & procédés",
+        icon: "🏭",
+        color: "#9B7FE0"
+      },
+      robotique: {
+        label: "Robotique & systèmes autonomes",
+        icon: "🤖",
+        color: "#E0708A"
+      },
+      logiciel_ia: {
+        label: "IA, logiciel & données",
+        icon: "💻",
+        color: "#4FA8E0"
+      },
+      energie: {
+        label: "Énergie & propulsion",
+        icon: "🔋",
+        color: "#7FCB6B"
+      },
+      capteurs_comms: {
+        label: "Capteurs, optronique & communications",
+        icon: "📡",
+        color: "#D99A4E"
+      },
+      espace: {
+        label: "Espace",
+        icon: "🛰️",
+        color: "#6E7FE0"
+      },
+      sante_biotech: {
+        label: "Santé & biotech",
+        icon: "🧬",
+        color: "#E06B6B"
+      },
+      industrie_defense: {
+        label: "Industrie & BITD de défense",
+        icon: "🛡️",
         color: "#C1553F"
       },
-      industrie: {
-        label: "Industrie",
-        color: "#5C7CA6"
+      economie_regulation: {
+        label: "Économie, financement & régulation",
+        icon: "💶",
+        color: "#B0A15E"
       }
     };
+    const CAT_KEYS = Object.keys(CATS);
 
     /* Approximate [longitude, latitude] centroids for every country currently
        used in the dataset. Purely for plotting bubbles on the map — a country
@@ -414,7 +453,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 1,
       country: "France",
       flag: "🇫🇷",
-      category: "defense",
+      categories: ["robotique", "industrie_defense"],
       date: "30 juin 2026",
       source: "L'Usine Nouvelle",
       title: "Harmattan AI devient le premier droniste des armées françaises",
@@ -426,7 +465,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 2,
       country: "France",
       flag: "🇫🇷",
-      category: "industrie",
+      categories: ["industrie_defense", "fabrication"],
       date: "28 juin 2026",
       source: "L'Usine Nouvelle",
       title: "Safran Electronics & Defense réorganise son outil industriel",
@@ -438,7 +477,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 3,
       country: "France",
       flag: "🇫🇷",
-      category: "industrie",
+      categories: ["energie", "fabrication"],
       date: "27 juin 2026",
       source: "L'Usine Nouvelle",
       title: "EDF réinternalise la production de pièces critiques des EPR2",
@@ -450,7 +489,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 4,
       country: "France",
       flag: "🇫🇷",
-      category: "defense",
+      categories: ["industrie_defense"],
       date: "15 juin 2026",
       source: "L'Usine Nouvelle",
       title: "Lance-roquettes souverain : Paris tranche entre deux consortiums",
@@ -462,7 +501,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 5,
       country: "France",
       flag: "🇫🇷",
-      category: "innovation",
+      categories: ["logiciel_ia", "fabrication"],
       date: "7 mai 2026",
       source: "Usine Nouvelle / Safran",
       title: "Safran et la start-up Quandela explorent le calcul quantique",
@@ -474,7 +513,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 6,
       country: "France",
       flag: "🇫🇷",
-      category: "defense",
+      categories: ["robotique", "capteurs_comms", "industrie_defense"],
       date: "10 juin 2026",
       source: "L'Usine Nouvelle",
       title: "Un démonstrateur anti-drones commandé à quatre industriels",
@@ -486,7 +525,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 7,
       country: "Allemagne",
       flag: "🇩🇪",
-      category: "defense",
+      categories: ["industrie_defense", "economie_regulation"],
       date: "11 mars 2026",
       source: "Breaking Defense",
       title: "Rheinmetall vise 45 % de croissance en 2026",
@@ -498,7 +537,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 8,
       country: "Allemagne",
       flag: "🇩🇪",
-      category: "defense",
+      categories: ["industrie_defense", "economie_regulation"],
       date: "24 juin 2026",
       source: "CNBC",
       title: "Berlin annule le programme de frégates F126, Rheinmetall dévisse",
@@ -510,7 +549,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 9,
       country: "Allemagne",
       flag: "🇩🇪",
-      category: "defense",
+      categories: ["industrie_defense", "economie_regulation"],
       date: "7 mai 2026",
       source: "The Defense Post",
       title: "Rheinmetall accélère son expansion navale",
@@ -522,7 +561,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 10,
       country: "Allemagne",
       flag: "🇩🇪",
-      category: "defense",
+      categories: ["industrie_defense", "economie_regulation"],
       date: "1 juillet 2026",
       source: "GuruFocus",
       title: "Berlin et Washington discutent d'une coproduction d'armement",
@@ -534,7 +573,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 11,
       country: "États-Unis",
       flag: "🇺🇸",
-      category: "defense",
+      categories: ["industrie_defense", "robotique", "economie_regulation"],
       date: "28 mai 2026",
       source: "ExecutiveGov",
       title: "Le budget FY27 de l'US Air Force muscle l'aviation de 6ᵉ génération",
@@ -546,7 +585,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 12,
       country: "États-Unis",
       flag: "🇺🇸",
-      category: "defense",
+      categories: ["industrie_defense", "energie"],
       date: "24 juin 2026",
       source: "Aviation Week",
       title: "Lockheed dévoile un planeur hypersonique low-cost",
@@ -558,7 +597,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 13,
       country: "États-Unis",
       flag: "🇺🇸",
-      category: "innovation",
+      categories: ["logiciel_ia", "energie"],
       date: "3 juillet 2026",
       source: "The Verge",
       title: "Nvidia minimise l'impact hydrique de ses data centers IA",
@@ -570,7 +609,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 14,
       country: "États-Unis",
       flag: "🇺🇸",
-      category: "innovation",
+      categories: ["logiciel_ia", "fabrication"],
       date: "3 juillet 2026",
       source: "The Verge",
       title: "Ford réembauche en urgence après un pari raté sur l'IA",
@@ -582,7 +621,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 15,
       country: "États-Unis",
       flag: "🇺🇸",
-      category: "innovation",
+      categories: ["logiciel_ia", "economie_regulation"],
       date: "2 juillet 2026",
       source: "TechCrunch",
       title: "Microsoft lance sa propre unité de déploiement d'IA d'entreprise",
@@ -594,7 +633,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 16,
       country: "États-Unis",
       flag: "🇺🇸",
-      category: "innovation",
+      categories: ["logiciel_ia", "economie_regulation", "industrie_defense"],
       date: "26 juin 2026",
       source: "Crunchbase News",
       title: "Baseten lève 1,5 Md$, la defense-tech Stark 569 M$",
@@ -606,7 +645,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 17,
       country: "États-Unis",
       flag: "🇺🇸",
-      category: "innovation",
+      categories: ["logiciel_ia", "economie_regulation"],
       date: "20 juin 2026",
       source: "Crunchbase News",
       title: "88 % des financements IA vont à des entreprises américaines",
@@ -618,7 +657,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 18,
       country: "États-Unis",
       flag: "🇺🇸",
-      category: "industrie",
+      categories: ["logiciel_ia", "economie_regulation"],
       date: "1 juin 2026",
       source: "Al Jazeera",
       title: "Washington resserre l'étau sur l'exportation de puces IA",
@@ -630,7 +669,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 19,
       country: "Chine",
       flag: "🇨🇳",
-      category: "industrie",
+      categories: ["logiciel_ia", "economie_regulation"],
       date: "6 mai 2026",
       source: "TechWire Asia",
       title: "Huawei accélère malgré les sanctions américaines",
@@ -642,7 +681,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 20,
       country: "Chine",
       flag: "🇨🇳",
-      category: "industrie",
+      categories: ["logiciel_ia", "fabrication"],
       date: "20 février 2026",
       source: "American Affairs Journal",
       title: "La Chine pousse ses fondeurs vers les nœuds avancés",
@@ -654,7 +693,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 21,
       country: "Japon",
       flag: "🇯🇵",
-      category: "innovation",
+      categories: ["robotique", "logiciel_ia", "economie_regulation"],
       date: "30 juin 2026",
       source: "Let's Data Science",
       title: "Tokyo mise 6,2 Md$ sur l'IA physique avec le consortium Noetra",
@@ -666,7 +705,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 22,
       country: "Japon",
       flag: "🇯🇵",
-      category: "innovation",
+      categories: ["robotique", "logiciel_ia"],
       date: "9 mars 2026",
       source: "The Japan Times",
       title: "Une start-up d'anciens de Google démarche les industriels japonais",
@@ -678,7 +717,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 23,
       country: "Japon",
       flag: "🇯🇵",
-      category: "innovation",
+      categories: ["robotique"],
       date: "28 mai 2026",
       source: "RoboticsTomorrow",
       title: "Tokyo accueille le premier Humanoids Summit d'Asie",
@@ -690,7 +729,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 24,
       country: "Inde",
       flag: "🇮🇳",
-      category: "defense",
+      categories: ["capteurs_comms", "materiaux"],
       date: "27 mai 2026",
       source: "Indian Defence News",
       title: "L'Inde maîtrise les puces radar au nitrure de gallium",
@@ -702,7 +741,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 25,
       country: "Inde",
       flag: "🇮🇳",
-      category: "defense",
+      categories: ["industrie_defense", "robotique"],
       date: "26 mai 2026",
       source: "Indian Defence News",
       title: "Adani Defence et le DRDO multiplient les essais réussis",
@@ -714,7 +753,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 26,
       country: "Inde",
       flag: "🇮🇳",
-      category: "defense",
+      categories: ["industrie_defense", "capteurs_comms"],
       date: "20 juin 2026",
       source: "Defence News India",
       title: "Nouveau S-400 russe en vue, en parallèle du programme Kusha",
@@ -726,7 +765,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 27,
       country: "Inde",
       flag: "🇮🇳",
-      category: "defense",
+      categories: ["industrie_defense", "energie"],
       date: "13 février 2026",
       source: "Indian Defence News",
       title: "Vers un transfert de technologie complet pour le moteur de l'AMCA",
@@ -738,7 +777,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 28,
       country: "Israël",
       flag: "🇮🇱",
-      category: "defense",
+      categories: ["industrie_defense", "economie_regulation"],
       date: "2 janvier 2026",
       source: "Breaking Defense",
       title: "Les trois grands industriels israéliens visent l'Europe et l'Asie",
@@ -750,7 +789,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 29,
       country: "Israël",
       flag: "🇮🇱",
-      category: "defense",
+      categories: ["industrie_defense", "economie_regulation"],
       date: "10 décembre 2025",
       source: "The Jerusalem Post",
       title: "Le ministère de la Défense mise sur les start-ups plutôt que sur les mastodontes",
@@ -762,7 +801,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 30,
       country: "Israël",
       flag: "🇮🇱",
-      category: "defense",
+      categories: ["industrie_defense"],
       date: "30 juin 2026",
       source: "The Jerusalem Post",
       title: "Anduril s'implante en Israël et s'associe à Elbit",
@@ -774,7 +813,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 31,
       country: "Royaume-Uni",
       flag: "🇬🇧",
-      category: "defense",
+      categories: ["robotique", "industrie_defense", "economie_regulation"],
       date: "1 juillet 2026",
       source: "Aerospace Global News",
       title: "Londres investit 5 milliards de livres dans les drones",
@@ -786,7 +825,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 32,
       country: "Ukraine",
       flag: "🇺🇦",
-      category: "defense",
+      categories: ["industrie_defense", "economie_regulation"],
       date: "1 juillet 2026",
       source: "Aerospace Global News",
       title: "Kiev signe pour des Gripen E suédois",
@@ -798,7 +837,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 33,
       country: "États-Unis",
       flag: "🇺🇸",
-      category: "innovation",
+      categories: ["espace", "economie_regulation"],
       date: "29 juin 2026",
       source: "Aerospace Global News",
       title: "Rocket Lab rachète Iridium pour 8 milliards de dollars",
@@ -810,7 +849,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 34,
       country: "Corée du Sud",
       flag: "🇰🇷",
-      category: "defense",
+      categories: ["robotique", "industrie_defense"],
       date: "1 juillet 2026",
       source: "Aerospace Global News",
       title: "Séoul teste ses défenses anti-essaims de drones",
@@ -822,7 +861,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 35,
       country: "États-Unis",
       flag: "🇺🇸",
-      category: "innovation",
+      categories: ["logiciel_ia", "economie_regulation"],
       date: "1 juillet 2026",
       source: "L'Usine Nouvelle",
       title: "Claude Sonnet 5 lancé sous surveillance de Washington",
@@ -834,7 +873,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 36,
       country: "France",
       flag: "🇫🇷",
-      category: "industrie",
+      categories: ["fabrication", "robotique"],
       date: "juin 2026",
       source: "L'Usine Nouvelle",
       title: "Le verrier Arc redémarre aux Émirats, Waymo s'installe en France",
@@ -846,7 +885,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 37,
       country: "États-Unis",
       flag: "🇺🇸",
-      category: "innovation",
+      categories: ["robotique", "economie_regulation"],
       date: "1 juillet 2026",
       source: "TechCrunch",
       title: "La course aux véhicules autonomes rejoue le scénario de 2016",
@@ -858,7 +897,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 38,
       country: "Taïwan",
       flag: "🇹🇼",
-      category: "industrie",
+      categories: ["logiciel_ia", "economie_regulation"],
       date: "15 juin 2026",
       source: "DigiTimes",
       title: "SK Hynix et Foxconn resserreraient leurs liens sur l'IA",
@@ -870,7 +909,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 39,
       country: "Brésil",
       flag: "🇧🇷",
-      category: "defense",
+      categories: ["industrie_defense"],
       date: "24 avril 2026",
       source: "Aeroflap",
       title: "Embraer veut aussi construire des frégates",
@@ -882,7 +921,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 40,
       country: "Brésil",
       flag: "🇧🇷",
-      category: "industrie",
+      categories: ["industrie_defense", "fabrication"],
       date: "26 mars 2026",
       source: "Zonebourse",
       title: "Premier chasseur Gripen E assemblé au Brésil",
@@ -894,7 +933,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 41,
       country: "Émirats arabes unis",
       flag: "🇦🇪",
-      category: "innovation",
+      categories: ["logiciel_ia", "energie"],
       date: "juin 2025",
       source: "LesNews",
       title: "Stargate UAE : un géant du calcul IA prend forme dans le Golfe",
@@ -906,7 +945,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 42,
       country: "Arabie saoudite",
       flag: "🇸🇦",
-      category: "industrie",
+      categories: ["logiciel_ia", "energie"],
       date: "28 avril 2026",
       source: "Agence de presse saoudienne (SPA)",
       title: "Riyad multiplie les data centers pour son ambition IA",
@@ -918,7 +957,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 43,
       country: "Pologne",
       flag: "🇵🇱",
-      category: "defense",
+      categories: ["industrie_defense", "economie_regulation"],
       date: "29 juin 2026",
       source: "Zone Militaire",
       title: "Varsovie commande trois sous-marins A26 à Saab",
@@ -930,7 +969,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 44,
       country: "Pologne",
       flag: "🇵🇱",
-      category: "industrie",
+      categories: ["industrie_defense", "fabrication"],
       date: "30 mai 2026",
       source: "Forum Militaire",
       title: "257 véhicules blindés Borsuk commandés, sur un total visé de 1 400",
@@ -942,7 +981,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 45,
       country: "Pologne",
       flag: "🇵🇱",
-      category: "industrie",
+      categories: ["industrie_defense", "economie_regulation"],
       date: "juin 2026",
       source: "L'Essentiel de l'Éco",
       title: "La Pologne, championne des dépenses OTAN, courtise les industriels français",
@@ -954,7 +993,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 46,
       country: "Australie",
       flag: "🇦🇺",
-      category: "defense",
+      categories: ["industrie_defense", "economie_regulation"],
       date: "22 mai 2026",
       source: "Zone Militaire",
       title: "Canberra prolonge ses vieux sous-marins Collins jusqu'en 2040",
@@ -966,7 +1005,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 47,
       country: "Australie",
       flag: "🇦🇺",
-      category: "defense",
+      categories: ["industrie_defense", "economie_regulation"],
       date: "31 mai 2026",
       source: "La Libre",
       title: "AUKUS revu : l'Australie recevra des sous-marins Virginia d'occasion",
@@ -978,7 +1017,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 48,
       country: "Italie",
       flag: "🇮🇹",
-      category: "defense",
+      categories: ["industrie_defense", "fabrication"],
       date: "16 juin 2026",
       source: "Zone Armée",
       title: "Leonardo dévoile son véhicule blindé amphibie à Eurosatory",
@@ -990,7 +1029,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 49,
       country: "Italie",
       flag: "🇮🇹",
-      category: "industrie",
+      categories: ["industrie_defense", "economie_regulation"],
       date: "9 janvier 2026",
       source: "Atalayar",
       title: "Leonardo bâtit un géant industriel entre Rome et Berlin",
@@ -1002,7 +1041,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 50,
       country: "Italie",
       flag: "🇮🇹",
-      category: "defense",
+      categories: ["industrie_defense", "economie_regulation"],
       date: "19 mai 2026",
       source: "IREFI / Le Monde",
       title: "Changement de direction chez Leonardo en pleine montée en cadence",
@@ -1014,7 +1053,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 51,
       country: "Canada",
       flag: "🇨🇦",
-      category: "defense",
+      categories: ["industrie_defense", "economie_regulation"],
       date: "9 mars 2026",
       source: "Gouvernement du Canada",
       title: "Ottawa investit 900 M$ dans sa nouvelle stratégie industrielle de défense",
@@ -1026,7 +1065,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 52,
       country: "Canada",
       flag: "🇨🇦",
-      category: "innovation",
+      categories: ["logiciel_ia", "robotique", "economie_regulation"],
       date: "17 février 2026",
       source: "Cabinet du Premier ministre du Canada",
       title: "Carney lance la première stratégie industrielle de défense du pays",
@@ -1038,7 +1077,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 53,
       country: "Turquie",
       flag: "🇹🇷",
-      category: "defense",
+      categories: ["robotique", "industrie_defense", "economie_regulation"],
       date: "3 février 2026",
       source: "Türkiye Today",
       title: "Baykar bat son record à 2,2 milliards de dollars d'exportations",
@@ -1050,7 +1089,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 54,
       country: "Turquie",
       flag: "🇹🇷",
-      category: "innovation",
+      categories: ["robotique", "logiciel_ia"],
       date: "16 mars 2026",
       source: "Breaking Defense",
       title: "Baykar dévoile son drone kamikaze K2 doté d'IA d'essaim",
@@ -1062,7 +1101,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 55,
       country: "Turquie",
       flag: "🇹🇷",
-      category: "industrie",
+      categories: ["industrie_defense", "economie_regulation", "robotique"],
       date: "8 janvier 2026",
       source: "War on the Rocks",
       title: "Après avoir racheté l'italien Piaggio, Baykar s'allie à Leonardo",
@@ -1074,7 +1113,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 56,
       country: "Indonésie",
       flag: "🇮🇩",
-      category: "defense",
+      categories: ["robotique", "industrie_defense", "economie_regulation"],
       date: "13 mai 2026",
       source: "Defence Industry EU",
       title: "L'Indonésie commande 12 drones de combat Kizilelma à Baykar",
@@ -1086,7 +1125,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 57,
       country: "Afrique du Sud",
       flag: "🇿🇦",
-      category: "industrie",
+      categories: ["industrie_defense", "economie_regulation"],
       date: "6 janvier 2026",
       source: "Wikipédia",
       title: "Denel reste connecté aux grands groupes européens malgré ses difficultés",
@@ -1098,7 +1137,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 58,
       country: "Afrique du Sud",
       flag: "🇿🇦",
-      category: "innovation",
+      categories: ["economie_regulation", "logiciel_ia"],
       date: "18 mai 2026",
       source: "Africa News Agency",
       title: "Pretoria consacre 572 millions de dollars à l'innovation",
@@ -1110,7 +1149,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 59,
       country: "Maroc",
       flag: "🇲🇦",
-      category: "industrie",
+      categories: ["fabrication", "economie_regulation"],
       date: "27 mai 2026",
       source: "Le Desk",
       title: "Le Maroc détrône l'Afrique du Sud à la tête de l'industrie africaine",
@@ -1122,7 +1161,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 60,
       country: "Chine",
       flag: "🇨🇳",
-      category: "innovation",
+      categories: ["materiaux", "capteurs_comms"],
       date: "5 novembre 2025",
       source: "Advanced Materials Technologies (Wiley)",
       title: "Vers des matériaux furtifs actifs sur plusieurs bandes à la fois",
@@ -1134,7 +1173,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 61,
       country: "Allemagne",
       flag: "🇩🇪",
-      category: "innovation",
+      categories: ["fabrication", "materiaux"],
       date: "20 avril 2026",
       source: "Tech Xplore",
       title: "Impression 3D multi-matériaux pour l'aérospatial et la mécanique",
@@ -1146,7 +1185,7 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
       id: 62,
       country: "Royaume-Uni",
       flag: "🇬🇧",
-      category: "innovation",
+      categories: ["logiciel_ia", "energie"],
       date: "1 avril 2026",
       source: "Rest of World",
       title: "L'IA frugale s'impose face aux géants du cloud",
@@ -1161,13 +1200,15 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
     /*  from the artifact to pull fresh items from anywhere in the world.   */
     /* ------------------------------------------------------------------ */
 
-    const REFRESH_PROMPT = `Tu es un service de veille internationale. Cherche sur le web des actualités RÉCENTES (derniers jours) sur la technologie, l'innovation, l'industrie et la défense, partout dans le monde — ne te limite pas aux grandes puissances habituelles (France, États-Unis, Chine, Allemagne) : cherche aussi activement des actualités provenant d'Amérique latine, d'Afrique, d'Asie du Sud-Est, d'Europe de l'Est ou du Sud, du Moyen-Orient et d'Océanie.
+    const REFRESH_PROMPT = `Tu es un service de veille pour un chargé de projet innovation au ministère des Armées, qui repère des innovations civiles à potentiel dual-use dans N'IMPORTE QUEL domaine (matériaux, logiciel, procédés, robotique, données, fabrication additive, énergie, capteurs, espace, santé, économie/régulation). Cherche sur le web des actualités RÉCENTES et FIABLES (revues à comité de lecture, presse spécialisée établie, instituts de recherche, agences de presse reconnues), n'importe où dans le monde.
+
+N'impose AUCUN quota : ni de pays, ni de catégorie, ni de nombre d'articles. Le seul critère est la pertinence et la fiabilité de la source — pas un équilibre statistique.
 
 Réponds EXCLUSIVEMENT avec un tableau JSON valide, sans texte autour, sans balises markdown ni \`\`\`. Chaque objet du tableau doit suivre exactement ce schéma :
 {
   "country": "nom du pays en français",
   "flag": "emoji drapeau du pays",
-  "category": "innovation" | "defense" | "industrie",
+  "categories": ["1 à 3 valeurs parmi: materiaux, fabrication, robotique, logiciel_ia, energie, capteurs_comms, espace, sante_biotech, industrie_defense, economie_regulation"],
   "date": "date approximative en français",
   "source": "nom du média",
   "title": "titre factuel court, max 12 mots, en français",
@@ -1177,7 +1218,7 @@ Réponds EXCLUSIVEMENT avec un tableau JSON valide, sans texte autour, sans bali
   "url": "URL réelle de la page trouvée"
 }
 
-Renvoie entre 6 et 10 objets, avec au moins 5 pays différents et au moins une actualité de chaque catégorie (innovation, defense, industrie).`;
+Renvoie autant d'objets que le justifie la qualité réelle de ce que tu trouves — cela peut être 2 ou 15, sans chercher un nombre rond.`;
     function extractJsonArray(text) {
       const start = text.indexOf("[");
       const end = text.lastIndexOf("]");
@@ -1209,11 +1250,11 @@ Renvoie entre 6 et 10 objets, avec au moins 5 pays différents et au moins une a
       const parsed = extractJsonArray(text);
       if (!Array.isArray(parsed) || parsed.length === 0) throw new Error("Réponse vide ou invalide.");
       const base = Date.now();
-      return parsed.filter(it => it && it.title && CATS[it.category]).map((it, i) => ({
+      return parsed.filter(it => it && it.title && Array.isArray(it.categories) && it.categories.some(c => CATS[c])).map((it, i) => ({
         id: base + i,
         country: it.country || "Inconnu",
         flag: it.flag || "🌐",
-        category: it.category,
+        categories: it.categories.filter(c => CATS[c]).slice(0, 4),
         date: it.date || "récemment",
         source: it.source || "Web",
         title: String(it.title),
@@ -1239,13 +1280,11 @@ Renvoie entre 6 et 10 objets, avec au moins 5 pays différents et au moins une a
         items.forEach(n => {
           n.companies.forEach(c => {
             counts.set(c, (counts.get(c) || 0) + 1);
-            if (!catCounts.has(c)) catCounts.set(c, {
-              innovation: 0,
-              defense: 0,
-              industrie: 0
-            });
+            if (!catCounts.has(c)) catCounts.set(c, {});
             const bucket = catCounts.get(c);
-            bucket[n.category] = (bucket[n.category] || 0) + 1;
+            n.categories.forEach(cat => {
+              bucket[cat] = (bucket[cat] || 0) + 1;
+            });
           });
           for (let i = 0; i < n.companies.length; i++) {
             for (let j = i + 1; j < n.companies.length; j++) {
@@ -1391,6 +1430,7 @@ Renvoie entre 6 et 10 objets, avec au moins 5 pays différents et au moins une a
         const dim = connected && !connected.has(n.id);
         const isSel = n.id === selectedCompany;
         const maxLen = expanded ? 26 : 16;
+        const showLabel = n.count >= 2 || isSel || connected && connected.has(n.id);
         return /*#__PURE__*/React.createElement("g", {
           key: n.id,
           onClick: () => onSelectCompany(isSel ? null : n.id),
@@ -1405,7 +1445,7 @@ Renvoie entre 6 et 10 objets, avec au moins 5 pays différents et au moins une a
           fillOpacity: dim ? 0.25 : 0.9,
           stroke: isSel ? "#E8A33D" : "#0B1220",
           strokeWidth: isSel ? 2.5 : 1
-        }), /*#__PURE__*/React.createElement("text", {
+        }, /*#__PURE__*/React.createElement("title", null, `${n.id} — ${n.count} article${n.count > 1 ? "s" : ""}`)), showLabel && /*#__PURE__*/React.createElement("text", {
           x: n.x,
           y: n.y + r + (expanded ? 13 : 11),
           textAnchor: "middle",
@@ -1413,7 +1453,27 @@ Renvoie entre 6 et 10 objets, avec au moins 5 pays différents et au moins une a
           fontFamily: "'IBM Plex Mono', monospace",
           fill: dim ? "#4A5670" : "#C7D0DE"
         }, n.id.length > maxLen ? n.id.slice(0, maxLen - 1) + "…" : n.id));
-      })));
+      })), /*#__PURE__*/React.createElement("div", {
+        className: "network-top-list"
+      }, /*#__PURE__*/React.createElement("div", {
+        className: "network-top-caption"
+      }, "Top acteurs ", !expanded && nodes.length > 8 ? `(8 sur ${nodes.length})` : `(${nodes.length})`), /*#__PURE__*/React.createElement("div", {
+        className: "network-top-rows"
+      }, [...nodes].sort((a, b) => b.count - a.count).slice(0, expanded ? 200 : 8).map(n => /*#__PURE__*/React.createElement("button", {
+        key: n.id,
+        className: `network-top-row ${n.id === selectedCompany ? "network-top-row--active" : ""}`,
+        onClick: () => onSelectCompany(n.id === selectedCompany ? null : n.id)
+      }, /*#__PURE__*/React.createElement("span", {
+        className: "legend-dot",
+        style: {
+          background: CATS[n.sector].color,
+          flexShrink: 0
+        }
+      }), /*#__PURE__*/React.createElement("span", {
+        className: "network-top-name"
+      }, n.id), /*#__PURE__*/React.createElement("span", {
+        className: "tab-count"
+      }, n.count))))));
     }
 
     /* ------------------------------------------------------------------ */
@@ -1469,18 +1529,16 @@ Renvoie entre 6 et 10 objets, avec au moins 5 pays différents et au moins une a
               country: n.country,
               flag: n.flag,
               count: 0,
-              cats: {
-                innovation: 0,
-                defense: 0,
-                industrie: 0
-              }
+              cats: {}
             });
           }
           const bucket = byCountry.get(key);
           bucket.count += 1;
-          bucket.cats[n.category] = (bucket.cats[n.category] || 0) + 1;
+          n.categories.forEach(cat => {
+            bucket.cats[cat] = (bucket.cats[cat] || 0) + 1;
+          });
         });
-        const bubbles = Array.from(byCountry.entries()).map(([key, b]) => {
+        const rawBubbles = Array.from(byCountry.entries()).map(([key, b]) => {
           const coords = COUNTRY_COORDS[b.country];
           if (!coords) return null;
           const [x, y] = projection(coords);
@@ -1488,17 +1546,30 @@ Renvoie entre 6 et 10 objets, avec au moins 5 pays différents et au moins une a
           return {
             key,
             ...b,
+            x0: x,
+            y0: y,
             x,
             y,
             sector
           };
         }).filter(Boolean);
+        const maxCount = Math.max(1, ...rawBubbles.map(b => b.count));
+        const radiusOf = b => (expanded ? 7 : 5) + b.count / maxCount * (expanded ? 24 : 16);
+        rawBubbles.forEach(b => {
+          b.r = radiusOf(b);
+        });
+
+        // Dodge overlapping bubbles (e.g. France/Germany/Italy/Poland/UK cluster
+        // in Western Europe) while keeping them anchored near their true
+        // position — a mild "collision map" rather than a full cartogram.
+        const sim = d3.forceSimulation(rawBubbles).force("x", d3.forceX(d => d.x0).strength(0.85)).force("y", d3.forceY(d => d.y0).strength(0.85)).force("collide", d3.forceCollide(d => d.r + (expanded ? 6 : 3)).strength(1)).stop();
+        for (let i = 0; i < 150; i++) sim.tick();
         return {
           projection,
           graticulePath,
-          bubbles
+          bubbles: rawBubbles
         };
-      }, [items, dims]);
+      }, [items, dims, expanded]);
       const maxCount = Math.max(1, ...bubbles.map(b => b.count));
       const sizeRefs = Array.from(new Set([1, Math.max(1, Math.round(maxCount / 2)), maxCount])).sort((a, b) => a - b);
       return /*#__PURE__*/React.createElement("div", {
@@ -1514,7 +1585,19 @@ Renvoie entre 6 et 10 objets, avec au moins 5 pays différents et au moins une a
         stroke: "#1C2740",
         strokeWidth: "1"
       }), bubbles.map(b => {
-        const r = (expanded ? 7 : 5) + b.count / maxCount * (expanded ? 24 : 16);
+        const dodged = Math.hypot(b.x - b.x0, b.y - b.y0) > 2;
+        return dodged ? /*#__PURE__*/React.createElement("line", {
+          key: `leader-${b.key}`,
+          x1: b.x0,
+          y1: b.y0,
+          x2: b.x,
+          y2: b.y,
+          stroke: "#3A4A6B",
+          strokeWidth: "0.75",
+          strokeDasharray: "1.5 2"
+        }) : null;
+      }), bubbles.map(b => {
+        const r = b.r;
         const isSel = selectedCountryKey === b.key;
         const dim = selectedCountryKey && !isSel;
         return /*#__PURE__*/React.createElement("g", {
@@ -1571,22 +1654,14 @@ Renvoie entre 6 et 10 objets, avec au moins 5 pays différents et au moins une a
         }, v));
       }))), /*#__PURE__*/React.createElement("div", {
         className: "legend"
-      }, /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("span", {
+      }, CAT_KEYS.map(c => /*#__PURE__*/React.createElement("span", {
+        key: c
+      }, /*#__PURE__*/React.createElement("span", {
         className: "legend-dot",
         style: {
-          background: CATS.defense.color
+          background: CATS[c].color
         }
-      }), "D\xE9fense"), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("span", {
-        className: "legend-dot",
-        style: {
-          background: CATS.innovation.color
-        }
-      }), "Tech / IA"), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("span", {
-        className: "legend-dot",
-        style: {
-          background: CATS.industrie.color
-        }
-      }), "Industrie"))));
+      }), CATS[c].icon, " ", CATS[c].label)))));
     }
 
     /* ------------------------------------------------------------------ */
@@ -1601,7 +1676,12 @@ Renvoie entre 6 et 10 objets, avec au moins 5 pays différents et au moins une a
     }) {
       const wrapRef = useRef(null);
       const [width, setWidth] = useState(320);
-      const height = expanded ? 260 : 108;
+      const height = expanded ? 320 : 140;
+      const barMax = expanded ? 90 : 22;
+      const baseline = height - (expanded ? 40 : 34);
+      const dotR = expanded ? 5.5 : 4;
+      const swarmTop = 8;
+      const swarmBottom = baseline - barMax - (expanded ? 16 : 10);
       useEffect(() => {
         const el = wrapRef.current;
         if (!el) return;
@@ -1641,13 +1721,27 @@ Renvoie entre 6 et 10 objets, avec au moins 5 pays différents et au moins une a
           count
         }));
         const maxBucket = Math.max(1, ...buckets.map(b => b.count));
+
+        // Beeswarm: x is fixed to the true date, y is only used to dodge dots
+        // that would otherwise overlap (several articles the same week/day).
+        // This is what actually makes individual points legible again.
+        const swarmCenter = (swarmTop + swarmBottom) / 2;
+        dated.forEach(d => {
+          d.x = xScale(d._date);
+          d.y = swarmCenter;
+        });
+        const sim = d3.forceSimulation(dated).force("x", d3.forceX(d => xScale(d._date)).strength(1)).force("y", d3.forceY(swarmCenter).strength(0.05)).force("collide", d3.forceCollide(dotR + 1.4)).stop();
+        for (let i = 0; i < 140; i++) sim.tick();
+        dated.forEach(d => {
+          d.y = Math.max(swarmTop, Math.min(swarmBottom, d.y));
+        });
         return {
           dated,
           xScale,
           buckets,
           maxBucket
         };
-      }, [items, width]);
+      }, [items, width, expanded]);
       if (dated.length === 0) {
         return /*#__PURE__*/React.createElement("div", {
           className: "empty-graph"
@@ -1659,8 +1753,6 @@ Renvoie entre 6 et 10 objets, avec au moins 5 pays différents et au moins une a
         month: "short"
       });
       const peakBucket = buckets.reduce((max, b) => b.count > max ? b.count : max, 0);
-      const barMax = expanded ? 100 : 28;
-      const baseline = height - (expanded ? 40 : 34);
       return /*#__PURE__*/React.createElement("div", {
         ref: wrapRef,
         className: "timeline-wrap"
@@ -1700,10 +1792,10 @@ Renvoie entre 6 et 10 objets, avec au moins 5 pays différents et au moins une a
         fill: "#8B96AB"
       }, fmtDate(t)))), dated.map(d => /*#__PURE__*/React.createElement("circle", {
         key: d.id,
-        cx: xScale(d._date),
-        cy: baseline - 8,
-        r: expanded ? 5.5 : 4,
-        fill: CATS[d.category].color,
+        cx: d.x,
+        cy: d.y,
+        r: dotR,
+        fill: CATS[d.categories[0]].color,
         fillOpacity: "0.9",
         stroke: "#0B1220",
         strokeWidth: "0.5",
@@ -1717,22 +1809,14 @@ Renvoie entre 6 et 10 objets, avec au moins 5 pays différents et au moins une a
         className: "timeline-peak"
       }, "Pic : ", peakBucket, " article", peakBucket > 1 ? "s" : "", "/semaine"), /*#__PURE__*/React.createElement("div", {
         className: "legend"
-      }, /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("span", {
+      }, CAT_KEYS.map(c => /*#__PURE__*/React.createElement("span", {
+        key: c
+      }, /*#__PURE__*/React.createElement("span", {
         className: "legend-dot",
         style: {
-          background: CATS.defense.color
+          background: CATS[c].color
         }
-      }), "D\xE9fense"), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("span", {
-        className: "legend-dot",
-        style: {
-          background: CATS.innovation.color
-        }
-      }), "Tech / IA"), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("span", {
-        className: "legend-dot",
-        style: {
-          background: CATS.industrie.color
-        }
-      }), "Industrie"))), expanded && /*#__PURE__*/React.createElement("div", {
+      }), CATS[c].icon, " ", CATS[c].label)))), expanded && /*#__PURE__*/React.createElement("div", {
         className: "timeline-detail-list"
       }, [...dated].sort((a, b) => b._date - a._date).map(d => /*#__PURE__*/React.createElement("div", {
         key: d.id,
@@ -1740,7 +1824,7 @@ Renvoie entre 6 et 10 objets, avec au moins 5 pays différents et au moins une a
       }, /*#__PURE__*/React.createElement("span", {
         className: "legend-dot",
         style: {
-          background: CATS[d.category].color,
+          background: CATS[d.categories[0]].color,
           flexShrink: 0
         }
       }), /*#__PURE__*/React.createElement("span", {
@@ -1752,11 +1836,15 @@ Renvoie entre 6 et 10 objets, avec au moins 5 pays différents et au moins une a
         target: "_blank",
         rel: "noopener noreferrer",
         className: "timeline-detail-title"
-      }, d.title, " ", /*#__PURE__*/React.createElement("span", {
+      }, /*#__PURE__*/React.createElement("span", {
+        className: "timeline-detail-cats"
+      }, d.categories.map(c => CATS[c].icon).join(" ")), d.title, " ", /*#__PURE__*/React.createElement("span", {
         className: "ext-icon"
       }, "\u2197")) : /*#__PURE__*/React.createElement("span", {
         className: "timeline-detail-title"
-      }, d.title)))));
+      }, /*#__PURE__*/React.createElement("span", {
+        className: "timeline-detail-cats"
+      }, d.categories.map(c => CATS[c].icon).join(" ")), d.title)))));
     }
     function TrendBars({
       items,
@@ -1800,14 +1888,10 @@ Renvoie entre 6 et 10 objets, avec au moins 5 pays différents et au moins une a
       if (items.length === 0) {
         return "Aucun article ne correspond aux filtres actuels — élargissez la sélection pour voir apparaître une synthèse.";
       }
-      const catCounts = {
-        innovation: 0,
-        defense: 0,
-        industrie: 0
-      };
-      items.forEach(n => {
-        catCounts[n.category] = (catCounts[n.category] || 0) + 1;
-      });
+      const catCounts = {};
+      items.forEach(n => n.categories.forEach(c => {
+        catCounts[c] = (catCounts[c] || 0) + 1;
+      }));
       const topCat = Object.entries(catCounts).sort((a, b) => b[1] - a[1])[0];
       const topCatPct = Math.round(topCat[1] / items.length * 100);
       const trendMap = new Map();
@@ -1888,13 +1972,14 @@ Renvoie entre 6 et 10 objets, avec au moins 5 pays différents et au moins une a
     function NewsCard({
       item,
       selectedCompany,
-      onSelectCompany
+      onSelectCompany,
+      onToggleCategory
     }) {
-      const cat = CATS[item.category] || CATS.innovation;
+      const primaryCat = CATS[item.categories[0]] || CATS[CAT_KEYS[0]];
       return /*#__PURE__*/React.createElement("article", {
         className: "card",
         style: {
-          borderLeftColor: cat.color
+          borderLeftColor: primaryCat.color
         }
       }, /*#__PURE__*/React.createElement("div", {
         className: "card-meta"
@@ -1905,17 +1990,20 @@ Renvoie entre 6 et 10 objets, avec au moins 5 pays différents et au moins une a
       }, item.flag, " ", item.country), /*#__PURE__*/React.createElement("span", {
         className: "dot"
       }, "\u2022"), /*#__PURE__*/React.createElement("span", {
-        className: "card-cat",
-        style: {
-          color: cat.color
-        }
-      }, cat.label), /*#__PURE__*/React.createElement("span", {
-        className: "dot"
-      }, "\u2022"), /*#__PURE__*/React.createElement("span", {
         className: "card-source"
       }, item.source), /*#__PURE__*/React.createElement("span", {
         className: "card-date"
-      }, item.date)), item.url ? /*#__PURE__*/React.createElement("a", {
+      }, item.date)), /*#__PURE__*/React.createElement("div", {
+        className: "card-cats"
+      }, item.categories.map(c => /*#__PURE__*/React.createElement("button", {
+        key: c,
+        className: "card-cat-chip",
+        style: {
+          color: CATS[c].color,
+          borderColor: CATS[c].color
+        },
+        onClick: () => onToggleCategory && onToggleCategory(c)
+      }, CATS[c].icon, " ", CATS[c].label))), item.url ? /*#__PURE__*/React.createElement("a", {
         className: "card-title-link",
         href: item.url,
         target: "_blank",
@@ -1944,7 +2032,7 @@ Renvoie entre 6 et 10 objets, avec au moins 5 pays différents et au moins une a
       const [activeView, setActiveView] = useState("articles"); // "articles" | "graphiques"
       const [expandedChart, setExpandedChart] = useState(null); // null | "map" | "timeline" | "network" | "trends"
       const [country, setCountry] = useState("all");
-      const [category, setCategory] = useState("all");
+      const [selectedCategories, setSelectedCategories] = useState([]); // empty = all
       const [company, setCompany] = useState(null);
       const [loading, setLoading] = useState(false);
       const [error, setError] = useState(null);
@@ -1960,21 +2048,19 @@ Renvoie entre 6 et 10 objets, avec au moins 5 pays différents et au moins une a
       const filtered = useMemo(() => {
         return items.filter(n => {
           if (country !== "all" && `${n.flag} ${n.country}` !== country) return false;
-          if (category !== "all" && n.category !== category) return false;
+          if (selectedCategories.length > 0 && !n.categories.some(c => selectedCategories.includes(c))) return false;
           if (company && !n.companies.includes(company)) return false;
           return true;
         }).sort((a, b) => b.id - a.id);
-      }, [items, country, category, company]);
+      }, [items, country, selectedCategories, company]);
       const categoryCounts = useMemo(() => {
-        const m = {
-          all: items.length,
-          innovation: 0,
-          defense: 0,
-          industrie: 0
-        };
-        items.forEach(n => {
-          m[n.category] = (m[n.category] || 0) + 1;
+        const m = {};
+        CAT_KEYS.forEach(k => {
+          m[k] = 0;
         });
+        items.forEach(n => n.categories.forEach(c => {
+          m[c] = (m[c] || 0) + 1;
+        }));
         return m;
       }, [items]);
       const topTrendName = useMemo(() => {
@@ -1985,8 +2071,11 @@ Renvoie entre 6 et 10 objets, avec au moins 5 pays différents et au moins une a
       }, [filtered]);
       const resetAll = () => {
         setCountry("all");
-        setCategory("all");
+        setSelectedCategories([]);
         setCompany(null);
+      };
+      const toggleCategory = key => {
+        setSelectedCategories(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]);
       };
       const handleRefresh = async () => {
         setLoading(true);
@@ -2070,13 +2159,16 @@ Renvoie entre 6 et 10 objets, avec au moins 5 pays différents et au moins une a
           padding: 6px 10px; border-radius: 8px; max-width: 240px; text-align: right;
         }
 
-        .tabs { display: flex; gap: 6px; margin: 18px 0 10px; flex-wrap: wrap; }
-        .tab {
-          font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 700;
-          padding: 7px 13px; border-radius: 999px; border: 1px solid var(--border);
-          background: var(--panel); color: var(--muted); cursor: pointer;
+        .cat-select { display: flex; gap: 7px; margin: 18px 0 6px; flex-wrap: wrap; }
+        .cat-chip {
+          font-family: 'Inter', sans-serif; font-size: 12.5px; font-weight: 600;
+          padding: 7px 12px; border-radius: 999px; border: 1px solid var(--border);
+          background: var(--panel); color: var(--muted); cursor: pointer; white-space: nowrap;
+          transition: border-color 0.15s, background 0.15s, color 0.15s;
         }
-        .tab--active { color: var(--ink); border-color: transparent; }
+        .cat-chip--all.cat-chip--active { border-color: var(--amber); background: #2A2213; color: var(--amber); }
+        .cat-chip:hover { border-color: var(--muted); }
+        .cat-select-hint { font-size: 11px; color: var(--muted); margin-bottom: 12px; font-style: italic; }
         .tab-count { opacity: 0.7; font-weight: 500; margin-left: 4px; font-size: 11px; }
 
         .country-strip {
@@ -2166,6 +2258,7 @@ Renvoie entre 6 et 10 objets, avec au moins 5 pays différents et au moins une a
         .timeline-detail-date { font-family: 'IBM Plex Mono', monospace; color: var(--muted); font-size: 11px; }
         .timeline-detail-country { color: var(--muted); font-size: 11.5px; }
         .timeline-detail-title { color: var(--text); text-decoration: none; }
+        .timeline-detail-cats { margin-right: 5px; }
         a.timeline-detail-title:hover { color: var(--amber); }
         @media (max-width: 640px) {
           .timeline-detail-row { grid-template-columns: 8px 1fr; grid-template-areas: "dot date" "dot country" "dot title"; row-gap: 2px; }
@@ -2173,6 +2266,13 @@ Renvoie entre 6 et 10 objets, avec au moins 5 pays différents et au moins une a
 
         .empty-graph { color: var(--muted); font-size: 12.5px; padding: 30px 0; text-align: center; }
         .graph-wrap { width: 100%; }
+        .graph-wrap circle, .map-wrap circle, .timeline-wrap circle {
+          transition: cx 0.5s cubic-bezier(0.22,1,0.36,1), cy 0.5s cubic-bezier(0.22,1,0.36,1),
+            r 0.35s ease, fill-opacity 0.3s ease, opacity 0.3s ease;
+        }
+        .graph-wrap line, .graph-wrap text, .map-wrap text {
+          transition: opacity 0.3s ease, stroke-opacity 0.3s ease;
+        }
 
         .trend-list { display: flex; flex-direction: column; gap: 8px; }
         .trend-row { display: grid; grid-template-columns: 1fr 2fr 20px; align-items: center; gap: 8px; }
@@ -2204,7 +2304,11 @@ Renvoie entre 6 et 10 objets, avec au moins 5 pays différents et au moins une a
           background: var(--amber); padding: 1px 6px; border-radius: 4px;
         }
         .chip-country { font-weight: 500; color: var(--text); }
-        .card-cat { font-weight: 700; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; }
+        .card-cats { display: flex; gap: 5px; flex-wrap: wrap; margin: 2px 0 8px; }
+        .card-cat-chip {
+          font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 6px;
+          border: 1px solid; background: transparent; cursor: pointer; white-space: nowrap;
+        }
         .dot { opacity: 0.5; }
         .card-source { font-style: italic; }
         .card-date { margin-left: auto; font-family: 'IBM Plex Mono', monospace; }
@@ -2228,6 +2332,18 @@ Renvoie entre 6 et 10 objets, avec au moins 5 pays différents et au moins une a
 
         .legend { display: flex; gap: 12px; font-size: 11px; color: var(--muted); margin-top: 10px; flex-wrap: wrap; }
         .legend-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
+
+        .network-top-list { margin-top: 12px; border-top: 1px solid var(--border); padding-top: 10px; }
+        .network-top-caption { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+        .network-top-rows { display: flex; flex-direction: column; gap: 3px; max-height: 260px; overflow-y: auto; }
+        .network-top-row {
+          display: flex; align-items: center; gap: 8px; background: none; border: none;
+          border-radius: 6px; padding: 4px 6px; cursor: pointer; text-align: left; width: 100%;
+          font-size: 12px; color: var(--text);
+        }
+        .network-top-row:hover { background: var(--panel2); }
+        .network-top-row--active { background: #2A2213; color: var(--amber); }
+        .network-top-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
         .kpi-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 16px 0; }
         .kpi-card {
@@ -2286,17 +2402,29 @@ Renvoie entre 6 et 10 objets, avec au moins 5 pays différents et au moins une a
       }, "Actualis\xE9 \xE0 ", lastUpdated.toLocaleTimeString("fr-FR")), error && /*#__PURE__*/React.createElement("div", {
         className: "error-banner"
       }, error))), /*#__PURE__*/React.createElement("div", {
-        className: "tabs"
-      }, ["all", "innovation", "defense", "industrie"].map(k => /*#__PURE__*/React.createElement("button", {
-        key: k,
-        className: `tab ${category === k ? "tab--active" : ""}`,
-        style: category === k ? {
-          background: k === "all" ? "#E8A33D" : CATS[k].color
-        } : {},
-        onClick: () => setCategory(k)
-      }, k === "all" ? "Tous" : CATS[k].label, /*#__PURE__*/React.createElement("span", {
+        className: "cat-select"
+      }, /*#__PURE__*/React.createElement("button", {
+        className: `cat-chip cat-chip--all ${selectedCategories.length === 0 ? "cat-chip--active" : ""}`,
+        onClick: () => setSelectedCategories([])
+      }, "\uD83C\uDF10 Toutes les cat\xE9gories ", /*#__PURE__*/React.createElement("span", {
         className: "tab-count"
-      }, categoryCounts[k] || 0)))), /*#__PURE__*/React.createElement("div", {
+      }, items.length)), CAT_KEYS.map(k => {
+        const active = selectedCategories.includes(k);
+        return /*#__PURE__*/React.createElement("button", {
+          key: k,
+          className: `cat-chip ${active ? "cat-chip--active" : ""}`,
+          style: active ? {
+            borderColor: CATS[k].color,
+            background: `${CATS[k].color}22`,
+            color: CATS[k].color
+          } : {},
+          onClick: () => toggleCategory(k)
+        }, CATS[k].icon, " ", CATS[k].label, " ", /*#__PURE__*/React.createElement("span", {
+          className: "tab-count"
+        }, categoryCounts[k] || 0));
+      })), selectedCategories.length > 1 && /*#__PURE__*/React.createElement("div", {
+        className: "cat-select-hint"
+      }, "Un article n'importe laquelle de ces ", selectedCategories.length, " cat\xE9gories est affich\xE9 (OR, pas ET)."), /*#__PURE__*/React.createElement("div", {
         className: "country-strip"
       }, /*#__PURE__*/React.createElement("button", {
         className: `country-chip ${country === "all" ? "country-chip--active" : ""}`,
@@ -2321,7 +2449,7 @@ Renvoie entre 6 et 10 objets, avec au moins 5 pays différents et au moins une a
       }, filtered.length)), /*#__PURE__*/React.createElement("button", {
         className: `view-tab ${activeView === "graphiques" ? "view-tab--active" : ""}`,
         onClick: () => setActiveView("graphiques")
-      }, "\uD83D\uDCCA Graphiques"), (country !== "all" || category !== "all" || company) && /*#__PURE__*/React.createElement("button", {
+      }, "\uD83D\uDCCA Graphiques"), (country !== "all" || selectedCategories.length > 0 || company) && /*#__PURE__*/React.createElement("button", {
         className: "clear-link",
         style: {
           marginLeft: "auto"
@@ -2341,7 +2469,8 @@ Renvoie entre 6 et 10 objets, avec au moins 5 pays différents et au moins une a
         key: item.id,
         item: item,
         selectedCompany: company,
-        onSelectCompany: setCompany
+        onSelectCompany: setCompany,
+        onToggleCategory: toggleCategory
       })), filtered.length === 0 && /*#__PURE__*/React.createElement("div", {
         className: "empty-graph"
       }, "Aucun article ne correspond \xE0 ces filtres."))), activeView === "graphiques" && /*#__PURE__*/React.createElement("div", {
@@ -2430,22 +2559,14 @@ Renvoie entre 6 et 10 objets, avec au moins 5 pays différents et au moins une a
         onSelectCompany: setCompany
       }), /*#__PURE__*/React.createElement("div", {
         className: "legend"
-      }, /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("span", {
+      }, CAT_KEYS.map(c => /*#__PURE__*/React.createElement("span", {
+        key: c
+      }, /*#__PURE__*/React.createElement("span", {
         className: "legend-dot",
         style: {
-          background: CATS.defense.color
+          background: CATS[c].color
         }
-      }), "D\xE9fense"), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("span", {
-        className: "legend-dot",
-        style: {
-          background: CATS.innovation.color
-        }
-      }), "Tech / IA"), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("span", {
-        className: "legend-dot",
-        style: {
-          background: CATS.industrie.color
-        }
-      }), "Industrie"))), /*#__PURE__*/React.createElement("div", {
+      }), CATS[c].icon, " ", CATS[c].label)))), /*#__PURE__*/React.createElement("div", {
         className: "panel"
       }, /*#__PURE__*/React.createElement("div", {
         className: "panel-title"
@@ -2487,22 +2608,14 @@ Renvoie entre 6 et 10 objets, avec au moins 5 pays différents et au moins une a
         style: {
           marginTop: 12
         }
-      }, /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("span", {
+      }, CAT_KEYS.map(c => /*#__PURE__*/React.createElement("span", {
+        key: c
+      }, /*#__PURE__*/React.createElement("span", {
         className: "legend-dot",
         style: {
-          background: CATS.defense.color
+          background: CATS[c].color
         }
-      }), "D\xE9fense"), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("span", {
-        className: "legend-dot",
-        style: {
-          background: CATS.innovation.color
-        }
-      }), "Tech / IA"), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("span", {
-        className: "legend-dot",
-        style: {
-          background: CATS.industrie.color
-        }
-      }), "Industrie"))), expandedChart === "trends" && /*#__PURE__*/React.createElement(ChartModal, {
+      }), CATS[c].icon, " ", CATS[c].label)))), expandedChart === "trends" && /*#__PURE__*/React.createElement(ChartModal, {
         title: "Tendances du moment",
         hint: "Toutes les tendances de la s\xE9lection filtr\xE9e, pas seulement le top 7.",
         onClose: () => setExpandedChart(null)
