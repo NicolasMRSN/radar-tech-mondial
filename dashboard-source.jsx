@@ -351,6 +351,21 @@ const SEED_NEWS = [
     summary: "Porté par l'automobile et une filière aéronautique qui a attiré Boeing, Safran et Airbus autour de Casablanca et Tanger, le royaume prend la première place du nouveau baromètre industriel de la BAD.",
     companies: ["Boeing", "Safran", "Airbus"], trends: ["Consolidation industrielle"],
     url: "https://ledesk.ma/datadesk/le-maroc-detrone-lafrique-du-sud-a-la-tete-de-lindustrie-africaine/" },
+  { id: 60, country: "Chine", flag: "🇨🇳", category: "innovation", date: "5 novembre 2025", source: "Advanced Materials Technologies (Wiley)",
+    title: "Vers des matériaux furtifs actifs sur plusieurs bandes à la fois",
+    summary: "Des chercheurs de l'université Beihang passent en revue les stratégies permettant de combiner l'absorption micro-ondes/térahertz et le camouflage infrarouge dans un même matériau — un axe clé pour la furtivité multi-spectrale de nouvelle génération.",
+    companies: ["Université Beihang"], trends: ["Matériaux furtifs"],
+    url: "https://advanced.onlinelibrary.wiley.com/doi/10.1002/admt.202501616" },
+  { id: 61, country: "Allemagne", flag: "🇩🇪", category: "innovation", date: "20 avril 2026", source: "Tech Xplore",
+    title: "Impression 3D multi-matériaux pour l'aérospatial et la mécanique",
+    summary: "Le Karlsruhe Institute of Technology dévoile CeraMMAM, un procédé capable de produire en une seule fois des pièces haute performance combinant plusieurs matériaux via un système de liant universel, présenté au salon Hannover Messe.",
+    companies: ["Karlsruhe Institute of Technology"], trends: ["Fabrication additive"],
+    url: "https://techxplore.com/news/2026-04-multi-material-3d-industrial-applications.html" },
+  { id: 62, country: "Royaume-Uni", flag: "🇬🇧", category: "innovation", date: "1 avril 2026", source: "Rest of World",
+    title: "L'IA frugale s'impose face aux géants du cloud",
+    summary: "Le Frugal AI Hub de Cambridge et plusieurs équipes de recherche développent des modèles d'IA volontairement allégés, capables de tourner hors ligne sur du matériel peu coûteux — une piste directe pour l'autonomie énergétique et la souveraineté numérique loin des grands centres de calcul.",
+    companies: ["Frugal AI Hub (Cambridge)"], trends: ["IA frugale"],
+    url: "https://restofworld.org/2026/frugal-ai-big-tech/" },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -1143,9 +1158,10 @@ export default function Dashboard() {
           <div className="eyebrow">Veille mondiale · Tech · Défense · Industrie</div>
           <h1 className="h1">Radar Tech Mondial</h1>
           <p className="sub">
-            Panorama par pays des dernières actualités technologiques, industrielles et de défense —
-            sources croisées et en expansion continue. Touchez un pays (chip, carte ou frise), une catégorie
-            ou un acteur pour filtrer ; touchez un titre pour lire l'article source.
+            Veille d'innovations civiles à potentiel dual-use — matériaux, logiciel, procédés, robotique, données,
+            fabrication, énergie et au-delà — sans quota de pays ni de catégorie : la sélection suit la pertinence
+            et la fiabilité de la source, pas un équilibre statistique. Touchez un pays, une catégorie ou un acteur
+            pour filtrer ; touchez un titre pour lire l'article source.
           </p>
         </div>
         <div className="refresh-box">
