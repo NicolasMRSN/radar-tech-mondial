@@ -29,7 +29,7 @@ RÈGLES ANTI-BIAIS — À RESPECTER STRICTEMENT, NE PAS S'EN ÉCARTER :
   décider quoi chercher — cela réintroduirait une logique de quota par
   la bande.
 
-- AUCUN quota de catégorie (innovation / defense / industrie). Ne force
+- AUCUN quota de catégorie, parmi les 10 domaines disponibles. Ne force
   jamais un article "defense" ou "industrie" juste pour compléter une
   catégorie sous-représentée. Si la journée n'offre que des innovations
   civiles pures, très bien : 100% "innovation" est un résultat valide.
@@ -59,8 +59,11 @@ RÈGLES ANTI-BIAIS — À RESPECTER STRICTEMENT, NE PAS S'EN ÉCARTER :
 Pour chaque article retenu, un objet avec :
 - country (nom du pays en français)
 - flag (emoji drapeau)
-- category ("innovation" | "defense" | "industrie" — au jugé, jamais
-  pour respecter un quota)
+- categories (tableau de 1 à 3 valeurs parmi : materiaux, fabrication,
+  robotique, logiciel_ia, energie, capteurs_comms, espace, sante_biotech,
+  industrie_defense, economie_regulation — au jugé, jamais pour respecter
+  un quota, et jamais une seule catégorie "par défaut" si plusieurs
+  s'appliquent réellement à l'article)
 - date (format libre en français)
 - source (nom du média/de la revue/de l'institution)
 - title (reformulé en français, jamais une citation du titre original)
