@@ -787,6 +787,64 @@ function TrendBars({ items }) {
 }
 
 /* ------------------------------------------------------------------ */
+/*  INSIGHT TEXT — a short written synthesis of the current selection,   */
+/*  for a "quick read" when there's no time to scan charts. Purely       */
+/*  computed from the data (counts, ranking) — no external call.        */
+/* ------------------------------------------------------------------ */
+
+function generateInsightText(items) {
+  if (items.length === 0) {
+    return "Aucun article ne correspond aux filtres actuels — élargissez la sélection pour voir apparaître une synthèse.";
+  }
+
+  const catCounts = { innovation: 0, defense: 0, industrie: 0 };
+  items.forEach((n) => { catCounts[n.category] = (catCounts[n.category] || 0) + 1; });
+  const topCat = Object.entries(catCounts).sort((a, b) => b[1] - a[1])[0];
+  const topCatPct = Math.round((topCat[1] / items.length) * 100);
+
+  const trendMap = new Map();
+  items.forEach((n) => n.trends.forEach((t) => trendMap.set(t, (trendMap.get(t) || 0) + 1)));
+  const topTrends = Array.from(trendMap.entries()).sort((a, b) => b[1] - a[1]).slice(0, 2);
+
+  const countryMap = new Map();
+  items.forEach((n) => {
+    const key = `${n.flag} ${n.country}`;
+    countryMap.set(key, (countryMap.get(key) || 0) + 1);
+  });
+  const topCountries = Array.from(countryMap.entries()).sort((a, b) => b[1] - a[1]).slice(0, 2);
+
+  const companyMap = new Map();
+  items.forEach((n) => n.companies.forEach((c) => companyMap.set(c, (companyMap.get(c) || 0) + 1)));
+  const topCompanies = Array.from(companyMap.entries()).sort((a, b) => b[1] - a[1]).slice(0, 3);
+
+  const parts = [];
+
+  parts.push(
+    `Sur ${items.length} article${items.length > 1 ? "s" : ""} suivi${items.length > 1 ? "s" : ""}, ` +
+    `la catégorie ${CATS[topCat[0]].label.toLowerCase()} domine (${topCatPct}%)` +
+    (topTrends.length ? `, portée notamment par « ${topTrends[0][0]} »${topTrends[0][1] > 1 ? ` (${topTrends[0][1]} occurrences)` : ""}.` : ".")
+  );
+
+  if (topCountries.length) {
+    const [c1, n1] = topCountries[0];
+    const second = topCountries[1] ? ` devant ${topCountries[1][0]} (${topCountries[1][1]})` : "";
+    parts.push(`${c1} concentre le plus d'activité (${n1} article${n1 > 1 ? "s" : ""})${second}.`);
+  }
+
+  if (topCompanies.length) {
+    const names = topCompanies.map(([name, count]) => `${name} (${count})`).join(", ");
+    parts.push(`Les acteurs les plus cités : ${names}.`);
+  }
+
+  if (topTrends.length > 1) {
+    parts.push(`À surveiller aussi : « ${topTrends[1][0]} » (${topTrends[1][1]} mention${topTrends[1][1] > 1 ? "s" : ""}).`);
+  }
+
+  return parts.join(" ");
+}
+
+
+/* ------------------------------------------------------------------ */
 /*  NEWS CARD                                                          */
 /* ------------------------------------------------------------------ */
 
@@ -959,6 +1017,9 @@ export default function Dashboard() {
         }
         .country-chip--active { border-color: var(--amber); background: #2A2213; color: var(--amber); }
 
+        .insight-panel { margin: 16px 0; border-left: 3px solid var(--amber); }
+        .insight-text { font-size: 13.5px; line-height: 1.65; color: #C7D0DE; margin: 0; }
+
         .view-switch {
           display: flex; align-items: center; gap: 8px; margin: 4px 0 16px; flex-wrap: wrap;
           border-bottom: 1px solid var(--border); padding-bottom: 10px;
@@ -1121,6 +1182,11 @@ export default function Dashboard() {
             {key} ({count})
           </button>
         ))}
+      </div>
+
+      <div className="panel insight-panel">
+        <div className="panel-title">Synthèse rapide</div>
+        <p className="insight-text">{generateInsightText(filtered)}</p>
       </div>
 
       <div className="view-switch">
